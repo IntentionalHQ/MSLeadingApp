@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body { height: 100%; }
+body { background: #0b1220; color: #e6ecf5; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+.card { background: #121a2b; border: 1px solid #1f2a44; border-radius: 12px; }
+.btn { display:inline-flex; align-items:center; justify-content:center; padding: 12px 16px; border-radius: 10px; font-weight: 600; }
+.btn-primary { background:#3b82f6; color:white; }
+.btn-primary:hover { background:#2563eb; }
+.btn-ghost { background:#1f2a44; color:#e6ecf5; }
+.btn-ghost:hover { background:#28345a; }
+.btn-danger { background:#dc2626; color:white; }
+.btn-lg { padding: 22px 24px; font-size: 20px; border-radius: 14px; }
+input, textarea, select { background:#0b1220; border:1px solid #2a3654; border-radius:8px; padding:10px 12px; color:#e6ecf5; width:100%; }
+label { font-size: 13px; color:#9fb0d3; display:block; margin-bottom:4px; }
+h1 { font-size: 22px; font-weight: 700; }
+h2 { font-size: 18px; font-weight: 700; }
