@@ -121,6 +121,14 @@ export default function EditItineraryPage() {
                   <div><label>Start time</label><input value={s.start_time ?? ""} onChange={(e) => patchSection(s.id, { start_time: e.target.value || null })} placeholder="10:30 AM" /></div>
                   <div><label>Duration (min)</label><input type="number" value={s.duration_minutes ?? ""} onChange={(e) => patchSection(s.id, { duration_minutes: e.target.value ? parseInt(e.target.value) : null })} /></div>
                 </div>
+                {s.section_type === "group_game" && (
+                  <div>
+                    <label>Chosen game</label>
+                    <select value={s.chosen_game ?? "bible_baseball"} onChange={(e) => patchSection(s.id, { chosen_game: e.target.value })}>
+                      <option value="bible_baseball">Bible Baseball</option>
+                    </select>
+                  </div>
+                )}
                 <div><label>Instructions</label><textarea rows={2} value={s.instructions ?? ""} onChange={(e) => patchSection(s.id, { instructions: e.target.value || null })} /></div>
                 <div><label>Script (what to say)</label><textarea rows={2} value={s.script ?? ""} onChange={(e) => patchSection(s.id, { script: e.target.value || null })} /></div>
                 <div><label>Discussion questions</label><textarea rows={2} value={s.discussion_questions ?? ""} onChange={(e) => patchSection(s.id, { discussion_questions: e.target.value || null })} /></div>

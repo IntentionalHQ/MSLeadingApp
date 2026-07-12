@@ -134,6 +134,18 @@ create table summaries (
   created_at timestamptz not null default now()
 );
 
+-- --------- Disable RLS (MVP: unguarded URL) ---------
+alter table itineraries disable row level security;
+alter table itinerary_sections disable row level security;
+alter table teams disable row level security;
+alter table students disable row level security;
+alter table score_events disable row level security;
+alter table memory_verse_recites disable row level security;
+alter table questions disable row level security;
+alter table question_game_uses disable row level security;
+alter table game_results disable row level security;
+alter table summaries disable row level security;
+
 -- --------- Seed: default teams ---------
 insert into teams (name, mascot, icon) values
   ('Bears', 'Grizzlies', '🐻'),

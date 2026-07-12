@@ -170,17 +170,21 @@ export default function BaseballPage() {
       winner_team_id: winner,
       details: { innings: state.inning, sudden_death: suddenDeath },
     });
-    // Award game points: 3 for winner, 1 for each run
-    if (winner) {
-      const w = winner === teamA.id ? teamA : teamB;
-      await supabase.from("teams").update({ total_score: w.total_score + 3 }).eq("id", w.id);
-      await supabase.from("score_events").insert({ team_id: w.id, itinerary_id: id, points: 3, reason: "Bible Baseball win" });
-    }
+    // Award game points: 3 for winner, plus 1 for each run scored.
+    // Apply once per team, in a single UPDATE, so scores never double-count.
     for (let i = 0; i < 2; i++) {
       const team = i === 0 ? teamA : teamB;
-      if (state.runs[i] > 0) {
-        await supabase.from("teams").update({ total_score: team.total_score + state.runs[i] + (winner === team.id ? 3 : 0) }).eq("id", team.id);
-        await supabase.from("score_events").insert({ team_id: team.id, itinerary_id: id, points: state.runs[i], reason: "Bible Baseball runs" });
+      const winBonus = winner === team.id ? 3 : 0;
+      const runs = state.runs[i];
+      const delta = winBonus + runs;
+      if (delta > 0) {
+        await supabase.from("teams").update({ total_score: team.total_score + delta }).eq("id", team.id);
+      }
+      if (runs > 0) {
+        await supabase.from("score_events").insert({ team_id: team.id, itinerary_id: id, points: runs, reason: "Bible Baseball runs" });
+      }
+      if (winBonus > 0) {
+        await supabase.from("score_events").insert({ team_id: team.id, itinerary_id: id, points: winBonus, reason: "Bible Baseball win" });
       }
     }
     alert("Game recorded.");
@@ -260,6 +264,7 @@ export default function BaseballPage() {
               <button onClick={() => setShowAnswer(true)} className="btn btn-ghost">Show Answer</button>
               <button onClick={correct} className="btn btn-primary">✅ Correct</button>
               <button onClick={wrong} className="btn btn-danger">❌ Wrong</button>
+              <button onClick={clearAtBat} className="btn btn-ghost">⏭ Skip</button>
             </div>
           ) : (
             <div className="p-3 rounded bg-yellow-900/30 border border-yellow-500 space-y-2">

@@ -40,6 +40,19 @@ export type Section = {
   discussion_questions: string | null;
   notes: string | null;
   completed: boolean;
+  chosen_game: string | null;
+};
+
+export type Contest = {
+  id: string;
+  name: string;
+  start_date: string | null;
+  end_date: string | null;
+  weeks: number | null;
+  status: "active" | "archived";
+  snapshot: any;
+  created_at: string;
+  archived_at: string | null;
 };
 
 export type Team = {

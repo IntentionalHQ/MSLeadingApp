@@ -11,20 +11,26 @@ export default function VerseCheckPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [done, setDone] = useState<Set<string>>(new Set());
-  const [saved, setSaved] = useState(false);
+  // How many points were already applied to each team for THIS itinerary via memory verse.
+  const [applied, setApplied] = useState<Record<string, number>>({});
+  const [saving, setSaving] = useState(false);
+  const [flash, setFlash] = useState("");
 
-  useEffect(() => {
-    (async () => {
-      const [{ data: it }, { data: t }, { data: s }, { data: r }] = await Promise.all([
-        supabase.from("itineraries").select("*").eq("id", id).single(),
-        supabase.from("teams").select("*").order("name"),
-        supabase.from("students").select("*").order("name"),
-        supabase.from("memory_verse_recites").select("student_id").eq("itinerary_id", id),
-      ]);
-      setIt(it as any); setTeams((t ?? []) as any); setStudents((s ?? []) as any);
-      setDone(new Set((r ?? []).map((x: any) => x.student_id)));
-    })();
-  }, [id]);
+  const load = async () => {
+    const [{ data: it }, { data: t }, { data: s }, { data: r }, { data: events }] = await Promise.all([
+      supabase.from("itineraries").select("*").eq("id", id).single(),
+      supabase.from("teams").select("*").order("name"),
+      supabase.from("students").select("*").order("name"),
+      supabase.from("memory_verse_recites").select("student_id").eq("itinerary_id", id),
+      supabase.from("score_events").select("team_id,points").eq("itinerary_id", id).eq("reason", "Memory verse recites"),
+    ]);
+    setIt(it as any); setTeams((t ?? []) as any); setStudents((s ?? []) as any);
+    setDone(new Set((r ?? []).map((x: any) => x.student_id)));
+    const a: Record<string, number> = {};
+    for (const e of (events ?? [])) a[e.team_id] = (a[e.team_id] || 0) + e.points;
+    setApplied(a);
+  };
+  useEffect(() => { load(); }, [id]);
 
   const toggle = async (studentId: string) => {
     const next = new Set(done);
@@ -38,16 +44,36 @@ export default function VerseCheckPage() {
     setDone(next);
   };
 
-  const applyPoints = async () => {
+  // Bump / lower the applied count for a team without needing per-student checks
+  // (e.g. an extra kid we forgot to enter). Adjusts total_score by the delta.
+  const bump = async (teamId: string, delta: number) => {
+    const team = teams.find((x) => x.id === teamId);
+    if (!team) return;
+    const cur = applied[teamId] ?? 0;
+    const next = Math.max(0, cur + delta);
+    const diff = next - cur;
+    if (diff === 0) return;
+    await supabase.from("score_events").insert({ team_id: teamId, itinerary_id: id, points: diff, reason: "Memory verse recites" });
+    await supabase.from("teams").update({ total_score: team.total_score + diff }).eq("id", teamId);
+    setApplied({ ...applied, [teamId]: next });
+    setTeams(teams.map((x) => (x.id === teamId ? { ...x, total_score: x.total_score + diff } : x)));
+  };
+
+  const syncFromChecks = async () => {
+    setSaving(true);
     for (const t of teams) {
-      const count = students.filter((s) => s.team_id === t.id && done.has(s.id)).length;
-      if (count > 0) {
-        await supabase.from("score_events").insert({ team_id: t.id, itinerary_id: id, points: count, reason: "Memory verse recites" });
-        await supabase.from("teams").update({ total_score: t.total_score + count }).eq("id", t.id);
+      const target = students.filter((s) => s.team_id === t.id && done.has(s.id)).length;
+      const cur = applied[t.id] ?? 0;
+      const diff = target - cur;
+      if (diff !== 0) {
+        await supabase.from("score_events").insert({ team_id: t.id, itinerary_id: id, points: diff, reason: "Memory verse recites" });
+        await supabase.from("teams").update({ total_score: t.total_score + diff }).eq("id", t.id);
       }
     }
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    setFlash("Synced to team totals ✓");
+    setTimeout(() => setFlash(""), 2500);
+    setSaving(false);
+    load();
   };
 
   if (!it) return <p>Loading…</p>;
@@ -60,9 +86,9 @@ export default function VerseCheckPage() {
       </div>
 
       {it.memory_verse && (
-        <div className="card p-4">
-          <div className="text-xs text-[#9fb0d3]">This week's verse</div>
-          <div className="italic mt-1 whitespace-pre-line">{it.memory_verse}</div>
+        <div className="card p-4 border-yellow-600">
+          <div className="text-xs text-yellow-500">This week's verse</div>
+          <div className="italic mt-1 whitespace-pre-line text-lg">{it.memory_verse}</div>
         </div>
       )}
 
@@ -70,11 +96,19 @@ export default function VerseCheckPage() {
         {teams.map((t) => {
           const teamStudents = students.filter((s) => s.team_id === t.id);
           const count = teamStudents.filter((s) => done.has(s.id)).length;
+          const wasApplied = applied[t.id] ?? 0;
           return (
             <div key={t.id} className="card p-3">
               <div className="flex items-center justify-between">
                 <div className="font-bold">{t.icon} {t.name}</div>
                 <div className="text-2xl font-mono">{count}</div>
+              </div>
+              <div className="text-xs text-[#9fb0d3] mt-1">
+                Applied so far: <span className="font-mono">{wasApplied}</span>
+              </div>
+              <div className="flex gap-1 mt-2">
+                <button onClick={() => bump(t.id, -1)} className="btn btn-ghost flex-1">−1</button>
+                <button onClick={() => bump(t.id, +1)} className="btn btn-ghost flex-1">+1</button>
               </div>
               <ul className="mt-2 space-y-1">
                 {teamStudents.map((s) => (
@@ -90,10 +124,10 @@ export default function VerseCheckPage() {
         })}
       </div>
 
-      <button onClick={applyPoints} className="btn btn-primary btn-lg w-full">
-        {saved ? "Points added ✓" : "Add points to team totals"}
+      <button onClick={syncFromChecks} disabled={saving} className="btn btn-primary btn-lg w-full">
+        {flash || "Sync check-marks → team totals"}
       </button>
-      <p className="text-xs text-[#9fb0d3]">1 point per successful recital. Pressing again will add them again — only press once.</p>
+      <p className="text-xs text-[#9fb0d3]">Adjusts each team's applied points to match how many students are checked. Safe to press multiple times — it only applies the difference.</p>
     </div>
   );
 }
