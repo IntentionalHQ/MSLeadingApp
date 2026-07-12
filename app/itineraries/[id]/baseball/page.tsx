@@ -1,31 +1,32 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { Team, Question } from "@/lib/types";
 
 type Difficulty = "single" | "double" | "triple" | "home_run";
-const HIT_BASES: Record<Difficulty, number> = { single: 1, double: 2, triple: 3, home_run: 4 };
 const HIT_LABEL: Record<Difficulty, string> = { single: "Single", double: "Double", triple: "Triple", home_run: "Home Run" };
+// Base value with-choices. Answering WITHOUT choices upgrades single→2, double→3.
+const BASE_WITH_CHOICES: Record<Difficulty, 1 | 2 | 3 | 4> = { single: 1, double: 2, triple: 3, home_run: 4 };
+const BASE_WITHOUT_CHOICES: Record<Difficulty, 1 | 2 | 3 | 4> = { single: 2, double: 3, triple: 3, home_run: 4 };
 const MAX_INNINGS = 3;
 
 type State = {
   inning: number;
   half: "top" | "bottom";
-  batting: 0 | 1; // team index (top of inning is team 0 batting, bottom team 1)
+  batting: 0 | 1;
   outs: number;
   bases: [boolean, boolean, boolean];
   runs: [number, number];
-  used: string[]; // question ids used
+  used: string[];
 };
 
 const initial: State = { inning: 1, half: "top", batting: 0, outs: 0, bases: [false, false, false], runs: [0, 0], used: [] };
 
 function advance(bases: [boolean, boolean, boolean], n: 1 | 2 | 3 | 4): { bases: [boolean, boolean, boolean]; runs: number } {
-  // Represent runner slots: pos 0 = batter after hit lands on base n; pos 1..3 existing runners on 1B/2B/3B.
   let runs = 0;
-  const runners: number[] = [0]; // batter starts at base 0
+  const runners: number[] = [0];
   if (bases[0]) runners.push(1);
   if (bases[1]) runners.push(2);
   if (bases[2]) runners.push(3);
@@ -44,6 +45,7 @@ export default function BaseballPage() {
   const [state, setState] = useState<State>(initial);
   const [current, setCurrent] = useState<Question | null>(null);
   const [pickedDiff, setPickedDiff] = useState<Difficulty | null>(null);
+  const [choicesRevealed, setChoicesRevealed] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
   const [popFly, setPopFly] = useState(false);
   const [suddenDeath, setSuddenDeath] = useState(false);
@@ -62,7 +64,7 @@ export default function BaseballPage() {
 
   const pickQuestion = async (diff: Difficulty) => {
     setPickedDiff(diff);
-    setShowAnswer(false); setPopFly(false);
+    setShowAnswer(false); setPopFly(false); setChoicesRevealed(false);
     const { data } = await supabase
       .from("questions").select("*")
       .eq("difficulty", diff).eq("active", true)
@@ -76,14 +78,12 @@ export default function BaseballPage() {
 
   const nextHalfIfDone = (outs: number, prevState: State): State => {
     if (outs < 3) return { ...prevState, outs };
-    // Half-inning over
     if (prevState.half === "top") {
       return { ...prevState, half: "bottom", batting: 1, outs: 0, bases: [false, false, false] };
     } else {
-      // Full inning over
       const nextInning = prevState.inning + 1;
       if (nextInning > MAX_INNINGS) {
-        return { ...prevState, outs: 3 }; // marker; handled by endGame
+        return { ...prevState, outs: 3 };
       }
       return { ...prevState, inning: nextInning, half: "top", batting: 0, outs: 0, bases: [false, false, false] };
     }
@@ -92,19 +92,18 @@ export default function BaseballPage() {
   const correct = () => {
     if (!current || !pickedDiff) return;
     if (suddenDeath) {
-      // Sudden death: correct HR = that team wins
       const nextRuns: [number, number] = [state.runs[0], state.runs[1]];
       nextRuns[state.batting] += 1;
       setState((s) => ({ ...s, runs: nextRuns }));
       endGame(nextRuns);
       return;
     }
-    const n = HIT_BASES[pickedDiff] as 1 | 2 | 3 | 4;
-    const { bases, runs: scored } = advance(state.bases, n);
+    const bases = choicesRevealed ? BASE_WITH_CHOICES[pickedDiff] : BASE_WITHOUT_CHOICES[pickedDiff];
+    const { bases: newBases, runs: scored } = advance(state.bases, bases);
     setState((s) => {
       const runs: [number, number] = [...s.runs] as [number, number];
       runs[s.batting] += scored;
-      return { ...s, bases, runs };
+      return { ...s, bases: newBases, runs };
     });
     clearAtBat();
   };
@@ -112,35 +111,34 @@ export default function BaseballPage() {
   const wrong = () => {
     if (!current) return;
     if (popFly) {
-      // Pop fly: other team was given a chance; wrong here means one more out
-      applyOut();
+      // Direct wrong on pop fly (fielding team was already asked and skipped)
+      applyOuts(1);
       return;
     }
-    // Offer pop-fly if pickedDiff was multiple choice or user wants to
     setPopFly(true);
   };
 
   const popFlyResult = (otherCorrect: boolean) => {
     setPopFly(false);
     if (otherCorrect) {
-      // Batting team out AND fielding team gets a run (house rule: bonus point). Spec says record additional out per rules.
-      applyOut();
+      // Pop fly caught: 2 outs (batter's out + bonus out)
+      applyOuts(2);
     } else {
-      applyOut();
+      // Fielding team missed the pop fly → still 1 out (batter's original miss)
+      applyOuts(1);
     }
   };
 
-  const applyOut = () => {
+  const applyOuts = (n: number) => {
     if (suddenDeath) {
-      // In sudden death, wrong = end this "swing"; other team gets to try
       setState((s) => ({ ...s, batting: (s.batting === 0 ? 1 : 0) as 0 | 1, outs: 0, bases: [false, false, false] }));
       clearAtBat();
       return;
     }
     setState((s) => {
-      const outs = s.outs + 1;
+      const outs = s.outs + n;
       const next = nextHalfIfDone(outs, s);
-      if (next.outs >= 3 && s.inning >= MAX_INNINGS && s.half === "bottom") {
+      if (outs >= 3 && s.inning >= MAX_INNINGS && s.half === "bottom") {
         setTimeout(() => endGame(s.runs), 0);
       }
       return next;
@@ -148,7 +146,7 @@ export default function BaseballPage() {
     clearAtBat();
   };
 
-  const clearAtBat = () => { setCurrent(null); setPickedDiff(null); setShowAnswer(false); };
+  const clearAtBat = () => { setCurrent(null); setPickedDiff(null); setShowAnswer(false); setChoicesRevealed(false); };
 
   const endGame = (finalRuns: [number, number]) => {
     if (finalRuns[0] === finalRuns[1] && !suddenDeath) {
@@ -170,8 +168,6 @@ export default function BaseballPage() {
       winner_team_id: winner,
       details: { innings: state.inning, sudden_death: suddenDeath },
     });
-    // Award game points: 3 for winner, plus 1 for each run scored.
-    // Apply once per team, in a single UPDATE, so scores never double-count.
     for (let i = 0; i < 2; i++) {
       const team = i === 0 ? teamA : teamB;
       const winBonus = winner === team.id ? 3 : 0;
@@ -193,6 +189,8 @@ export default function BaseballPage() {
   const restart = () => { setState(initial); setGameOver(null); setSuddenDeath(false); setPopFly(false); clearAtBat(); };
 
   if (teams.length < 2) return <p className="p-4">Need at least two teams. Go to <Link href="/teams" className="text-blue-400">Teams</Link>.</p>;
+
+  const previewBases = pickedDiff ? (choicesRevealed ? BASE_WITH_CHOICES[pickedDiff] : BASE_WITHOUT_CHOICES[pickedDiff]) : 0;
 
   return (
     <div className="space-y-3">
@@ -241,12 +239,28 @@ export default function BaseballPage() {
             ))}
           </div>
           {suddenDeath && <p className="text-xs text-[#9fb0d3] mt-2">Only Home Runs in sudden death.</p>}
+          <p className="text-xs text-[#9fb0d3] mt-2">
+            Bonus rule: Answer a Single without seeing the choices = <b>Double</b>. Double without choices = <b>Triple</b>.
+          </p>
         </div>
       ) : (
         <div className="card p-4 space-y-3">
-          <div className="text-xs uppercase text-[#9fb0d3]">{HIT_LABEL[pickedDiff!]} · {battingTeam?.name}</div>
+          <div className="text-xs uppercase text-[#9fb0d3]">
+            {HIT_LABEL[pickedDiff!]} · {battingTeam?.name}
+            {pickedDiff && (pickedDiff === "single" || pickedDiff === "double") && (
+              <span className="ml-2 text-yellow-400">
+                {choicesRevealed ? `(→ ${previewBases} base${previewBases > 1 ? "s" : ""})` : `(→ ${previewBases} bases if correct without choices)`}
+              </span>
+            )}
+          </div>
           <div className="text-lg font-semibold">{current.text}</div>
-          {current.choices && (
+
+          {current.choices && !choicesRevealed && (pickedDiff === "single" || pickedDiff === "double") && (
+            <button onClick={() => setChoicesRevealed(true)} className="btn btn-ghost">
+              Show Choices (drops to {BASE_WITH_CHOICES[pickedDiff]} base{BASE_WITH_CHOICES[pickedDiff] > 1 ? "s" : ""})
+            </button>
+          )}
+          {current.choices && (choicesRevealed || pickedDiff === "triple" || pickedDiff === "home_run") && (
             <ul className="space-y-1">
               {current.choices.map((c) => (
                 <li key={c} className="p-2 rounded bg-[#0b1220] border border-[#1f2a44]">{c}</li>
@@ -268,10 +282,10 @@ export default function BaseballPage() {
             </div>
           ) : (
             <div className="p-3 rounded bg-yellow-900/30 border border-yellow-500 space-y-2">
-              <div className="text-sm">Offer Pop Fly to {fieldingTeam?.name}?</div>
+              <div className="text-sm">Pop Fly! Offer the question to {fieldingTeam?.name}. If they get it right, that's <b>2 outs</b>.</div>
               <div className="flex gap-2">
-                <button onClick={() => popFlyResult(true)} className="btn btn-primary">{fieldingTeam?.name} Correct</button>
-                <button onClick={() => popFlyResult(false)} className="btn btn-danger">Wrong / Skip</button>
+                <button onClick={() => popFlyResult(true)} className="btn btn-primary">{fieldingTeam?.name} Correct (2 outs)</button>
+                <button onClick={() => popFlyResult(false)} className="btn btn-danger">Wrong / Skip (1 out)</button>
               </div>
             </div>
           )}

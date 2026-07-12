@@ -102,7 +102,21 @@ export default function LeaderModePage() {
           {current.instructions && <div className="mt-3"><div className="text-xs text-[#9fb0d3]">Instructions</div><div>{current.instructions}</div></div>}
           {current.script && <div className="mt-3 p-3 rounded bg-[#0b1220] border border-[#1f2a44]"><div className="text-xs text-[#9fb0d3]">Say</div><div className="italic whitespace-pre-line">{current.script}</div></div>}
           {current.discussion_questions && <div className="mt-3"><div className="text-xs text-[#9fb0d3]">Discussion</div><div className="whitespace-pre-line">{current.discussion_questions}</div></div>}
-          {current.notes && <div className="mt-3"><div className="text-xs text-[#9fb0d3]">Notes</div><div className="whitespace-pre-line">{current.notes}</div></div>}
+
+          {/* Inline-editable notes: save on blur */}
+          <div className="mt-3">
+            <div className="text-xs text-[#9fb0d3]">Notes (optional — visible here while leading)</div>
+            <textarea
+              rows={2}
+              defaultValue={current.notes ?? ""}
+              placeholder="Anything to remember for this section this week…"
+              onBlur={async (e) => {
+                const value = e.target.value || null;
+                await supabase.from("itinerary_sections").update({ notes: value }).eq("id", current.id);
+                setSections((prev) => prev.map((s) => (s.id === current.id ? { ...s, notes: value } : s)));
+              }}
+            />
+          </div>
 
           <div className="mt-4 flex flex-col gap-2">
             {current.section_type === "memory_verse_check" && (

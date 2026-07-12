@@ -1,20 +1,25 @@
 -- ============================================================
--- MS Leading App — Supabase schema
--- Paste this into the Supabase SQL editor and Run.
--- Single-leader MVP: RLS disabled (unguarded URL).
+-- MS Leading App — Supabase schema  (RUN ONCE, on a NEW project)
+-- ============================================================
+-- ⚠️  DANGER: the DROP block below WIPES ALL YOUR DATA.
+--     Leave it commented out unless you truly want to start over.
+--     For schema changes on an existing DB, use v2_migration.sql.
 -- ============================================================
 
--- Reset (safe on fresh project; drops MVP tables only)
-drop table if exists summaries cascade;
-drop table if exists game_results cascade;
-drop table if exists score_events cascade;
-drop table if exists memory_verse_recites cascade;
-drop table if exists question_game_uses cascade;
-drop table if exists questions cascade;
-drop table if exists students cascade;
-drop table if exists teams cascade;
-drop table if exists itinerary_sections cascade;
-drop table if exists itineraries cascade;
+-- Uncomment these ten lines ONLY if you want to nuke everything and start fresh:
+-- drop table if exists summaries cascade;
+-- drop table if exists game_results cascade;
+-- drop table if exists score_events cascade;
+-- drop table if exists memory_verse_recites cascade;
+-- drop table if exists question_game_uses cascade;
+-- drop table if exists questions cascade;
+-- drop table if exists students cascade;
+-- drop table if exists teams cascade;
+-- drop table if exists itinerary_sections cascade;
+-- drop table if exists itineraries cascade;
+
+-- (With the DROP block commented out, running this file on an existing DB
+-- will just error out on the CREATE TABLE — an error is safe, no data is lost.)
 
 create extension if not exists "pgcrypto";
 
