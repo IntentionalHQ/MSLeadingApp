@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { Team, PirQuestion } from "@/lib/types";
+import { shuffle } from "@/lib/shuffle";
 
 const WIN_TARGET = 5;
 
@@ -31,7 +32,7 @@ export default function BiblePriceIsRightPage() {
         supabase.from("pir_questions").select("*").eq("active", true).limit(500),
       ]);
       setTeams((t ?? []) as Team[]);
-      const list = (p ?? []) as PirQuestion[];
+      const list = shuffle((p ?? []) as PirQuestion[]);
       setPool(list);
       const cats = Array.from(new Set(list.map((q) => q.category).filter(Boolean))) as string[];
       setCategories(cats.sort());
@@ -180,11 +181,32 @@ export default function BiblePriceIsRightPage() {
         </div>
       ) : (
         <div className="card p-4 space-y-3">
-          <div className="flex items-center justify-between text-xs uppercase text-[#9fb0d3]">
-            <span>{current.category}</span>
-            {current.unit && <span>Answer in {current.unit}</span>}
-          </div>
+          <div className="text-xs uppercase text-[#9fb0d3]">{current.category}</div>
           <div className="text-lg font-semibold">{current.question}</div>
+          {current.unit && (
+            <div className="inline-block px-3 py-1 rounded-full bg-blue-900 border border-blue-500 text-blue-100 text-sm font-semibold">
+              Answer in {current.unit}
+            </div>
+          )}
+
+          {/* Leader context — visible during bidding and after reveal.
+              Explains what the question is asking without spoiling the number. */}
+          {(current.background || current.reference_1 || current.reference_2) && (
+            <div className="p-3 rounded bg-[#0b1220] border border-blue-600 space-y-2">
+              <div className="text-xs uppercase text-blue-400">Leader context</div>
+              {current.background && (
+                <div className="text-sm">{current.background}</div>
+              )}
+              {(current.reference_1 || current.reference_2) && (
+                <div className="text-xs text-[#9fb0d3]">
+                  📖 {[current.reference_1, current.reference_2].filter(Boolean).join(" · ")}
+                </div>
+              )}
+              {current.fact_type && (
+                <div className="text-xs text-[#9fb0d3]">Fact type: {current.fact_type}</div>
+              )}
+            </div>
+          )}
 
           {phase === "bidding" && (
             <>
@@ -234,18 +256,6 @@ export default function BiblePriceIsRightPage() {
                   );
                 })}
               </div>
-
-              {current.background && (
-                <div className="text-sm text-[#9fb0d3] mt-1">
-                  <div className="text-xs uppercase">Background</div>
-                  {current.background}
-                </div>
-              )}
-              {(current.reference_1 || current.reference_2) && (
-                <div className="text-xs text-[#9fb0d3]">
-                  📖 {[current.reference_1, current.reference_2].filter(Boolean).join(" · ")}
-                </div>
-              )}
 
               <button onClick={nextQuestion} className="btn btn-primary btn-lg w-full">Next Question →</button>
             </>

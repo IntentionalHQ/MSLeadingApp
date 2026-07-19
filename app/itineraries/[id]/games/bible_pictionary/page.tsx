@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { Team, GamePrompt } from "@/lib/types";
+import { shuffle } from "@/lib/shuffle";
 
 const ROUND_SECONDS = 60;
 const WIN_TARGET = 5;
@@ -31,7 +32,7 @@ export default function BiblePictionaryPage() {
         supabase.from("game_prompts").select("*").eq("active", true).limit(500),
       ]);
       setTeams((t ?? []) as Team[]);
-      setPool((p ?? []) as GamePrompt[]);
+      setPool(shuffle((p ?? []) as GamePrompt[]));
     })();
   }, []);
 

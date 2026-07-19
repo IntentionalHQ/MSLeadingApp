@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { Team, GamePrompt } from "@/lib/types";
+import { shuffle } from "@/lib/shuffle";
 
 const MAX_WRONG = 6;
 const WIN_TARGET = 3;
@@ -56,7 +57,7 @@ export default function BibleHangmanPage() {
         supabase.from("game_prompts").select("*").eq("active", true).limit(500),
       ]);
       setTeams((t ?? []) as Team[]);
-      setPool((p ?? []) as GamePrompt[]);
+      setPool(shuffle((p ?? []) as GamePrompt[]));
     })();
   }, []);
 
