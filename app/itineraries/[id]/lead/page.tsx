@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { Itinerary, Section } from "@/lib/types";
 import { SECTION_LABEL } from "@/lib/types";
+import { gameLabel, gameRoutePath } from "@/lib/games";
 
 export default function LeaderModePage() {
   const { id } = useParams<{ id: string }>();
@@ -123,9 +124,15 @@ export default function LeaderModePage() {
               <Link href={`/itineraries/${id}/verse`} className="btn btn-ghost btn-lg">✅ Open Memory Verse Check</Link>
             )}
             {current.section_type === "group_game" && (
-              <Link href={`/itineraries/${id}/${current.chosen_game || "baseball"}`} className="btn btn-ghost btn-lg">
-                ⚾ Play {gameLabel(current.chosen_game)}
-              </Link>
+              current.chosen_game && current.chosen_game !== "pick_at_time" ? (
+                <Link href={gameRoutePath(id, current.chosen_game)} className="btn btn-ghost btn-lg">
+                  🎮 Play {gameLabel(current.chosen_game)}
+                </Link>
+              ) : (
+                <Link href={`/itineraries/${id}/games`} className="btn btn-ghost btn-lg">
+                  🎮 Choose a Game
+                </Link>
+              )
             )}
             {current.section_type === "score_recording" && (
               <Link href={`/itineraries/${id}/summary`} className="btn btn-ghost btn-lg">📝 Record Summary</Link>
@@ -155,7 +162,3 @@ export default function LeaderModePage() {
   );
 }
 
-function gameLabel(g: string | null | undefined) {
-  if (!g || g === "bible_baseball") return "Bible Baseball";
-  return g;
-}

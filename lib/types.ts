@@ -69,6 +69,33 @@ export type Student = {
   team_id: string | null;
 };
 
+export type GamePrompt = {
+  id: string;
+  text: string;
+  category: "person" | "place" | "object" | "story" | "theme" | "other";
+  difficulty: "easy" | "medium" | "hard";
+  banned_words: string[] | null;
+  testament: "OT" | "NT" | null;
+  hint: string | null;
+  active: boolean;
+};
+
+export type PirQuestion = {
+  id: string;
+  question: string;
+  host_answer: string | null;
+  accepted_answer: string | null;
+  numeric_target: number | null;
+  unit: string | null;
+  category: string | null;
+  background: string | null;
+  reference_1: string | null;
+  reference_2: string | null;
+  fact_type: string | null;
+  source_url: string | null;
+  active: boolean;
+};
+
 export type Question = {
   id: string;
   text: string;

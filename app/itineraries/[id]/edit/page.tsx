@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { Itinerary, Section, SectionType } from "@/lib/types";
 import { SECTION_LABEL } from "@/lib/types";
+import { GAMES } from "@/lib/games";
 
 export default function EditItineraryPage() {
   const { id } = useParams<{ id: string }>();
@@ -124,8 +125,13 @@ export default function EditItineraryPage() {
                 {s.section_type === "group_game" && (
                   <div>
                     <label>Chosen game</label>
-                    <select value={s.chosen_game ?? "bible_baseball"} onChange={(e) => patchSection(s.id, { chosen_game: e.target.value })}>
-                      <option value="bible_baseball">Bible Baseball</option>
+                    <select value={s.chosen_game ?? "pick_at_time"} onChange={(e) => patchSection(s.id, { chosen_game: e.target.value })}>
+                      <option value="pick_at_time">Let leader pick during group</option>
+                      {GAMES.map((g) => (
+                        <option key={g.id} value={g.id}>
+                          {g.icon} {g.label}{!g.ready ? " (coming soon)" : ""}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 )}
