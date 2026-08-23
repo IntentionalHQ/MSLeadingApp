@@ -49,6 +49,7 @@ export type Contest = {
   start_date: string | null;
   end_date: string | null;
   weeks: number | null;
+  duration_months: number | null;
   status: "active" | "archived";
   snapshot: any;
   created_at: string;

@@ -27,13 +27,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="max-w-3xl mx-auto p-4 pb-24">
           <OfflineBanner />
           <ScoreBar />
-          <header className="flex items-center justify-between mb-4">
-            <Link href="/" className="text-lg font-bold">MS Leading</Link>
-            <nav className="flex gap-3 text-sm text-[#9fb0d3]">
-              <Link href="/itineraries">Itineraries</Link>
-              <Link href="/teams">Teams</Link>
-              <Link href="/summaries">History</Link>
-              <Link href="/admin">Question Banks</Link>
+          <header className="mb-4">
+            <Link href="/" className="text-lg font-bold block mb-2">MS Leading</Link>
+            <nav className="flex gap-4 text-sm text-[#9fb0d3] overflow-x-auto whitespace-nowrap -mx-1 px-1 pb-1">
+              <Link href="/itineraries" className="shrink-0 py-1">Sundays</Link>
+              <Link href="/games" className="shrink-0 py-1">Games</Link>
+              <Link href="/teams" className="shrink-0 py-1">Teams</Link>
+              <Link href="/summaries" className="shrink-0 py-1">History</Link>
+              <Link href="/admin" className="shrink-0 py-1">Questions</Link>
             </nav>
           </header>
           {children}

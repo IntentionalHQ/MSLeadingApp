@@ -36,7 +36,7 @@ export const GAMES: GameDef[] = [
     short: "Students move to the corner of their answer choice.",
     description:
       "Each corner is an answer choice. Students move to the corner they think is correct, then you reveal the answer.",
-    ready: false,
+    ready: true,
   },
   {
     id: "bible_taboo",
@@ -45,7 +45,7 @@ export const GAMES: GameDef[] = [
     short: "Describe the answer without saying the banned words.",
     description:
       "Students describe a Bible person, place, object, or story without using the banned words on the card.",
-    ready: false,
+    ready: true,
   },
   {
     id: "bible_hangman",
@@ -126,4 +126,12 @@ export function gameRoutePath(itineraryId: string, id: string): string {
   if (!def) return `/itineraries/${itineraryId}/games`;
   if (id === "bible_baseball") return `/itineraries/${itineraryId}/baseball`;
   return `/itineraries/${itineraryId}/games/${id}`;
+}
+
+// Standalone game routes — played without an itinerary. Results still record
+// globally (itinerary_id is null).
+export function standaloneGameRoutePath(id: string): string {
+  const def = (GAMES_BY_ID as any)[id];
+  if (!def) return `/games`;
+  return `/games/${id}`;
 }

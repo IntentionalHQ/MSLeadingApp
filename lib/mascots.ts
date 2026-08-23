@@ -1,0 +1,130 @@
+// Mascot pool for team seasons.
+// Each season the app picks a fresh pairing of mascots from this list. Every
+// emoji is distinct so two teams shown side-by-side never look identical.
+// Feel free to add/remove — the picker just needs at least 2 entries.
+
+export type Mascot = { name: string; emoji: string };
+
+export const MASCOTS: Mascot[] = [
+  { name: "Grizzlies", emoji: "🐻" },
+  { name: "Pandas", emoji: "🐼" },
+  { name: "Koalas", emoji: "🐨" },
+  { name: "Tigers", emoji: "🐯" },
+  { name: "Lions", emoji: "🦁" },
+  { name: "Longhorns", emoji: "🐮" },
+  { name: "Razorbacks", emoji: "🐷" },
+  { name: "Warthogs", emoji: "🐗" },
+  { name: "Bullfrogs", emoji: "🐸" },
+  { name: "Monkeys", emoji: "🐵" },
+  { name: "Roosters", emoji: "🐔" },
+  { name: "Penguins", emoji: "🐧" },
+  { name: "Sparrows", emoji: "🐦" },
+  { name: "Chicks", emoji: "🐤" },
+  { name: "Mallards", emoji: "🦆" },
+  { name: "Eagles", emoji: "🦅" },
+  { name: "Owls", emoji: "🦉" },
+  { name: "Bats", emoji: "🦇" },
+  { name: "Wolves", emoji: "🐺" },
+  { name: "Mustangs", emoji: "🐴" },
+  { name: "Unicorns", emoji: "🦄" },
+  { name: "Hornets", emoji: "🐝" },
+  { name: "Caterpillars", emoji: "🐛" },
+  { name: "Monarchs", emoji: "🦋" },
+  { name: "Snails", emoji: "🐌" },
+  { name: "Ladybugs", emoji: "🐞" },
+  { name: "Ants", emoji: "🐜" },
+  { name: "Crickets", emoji: "🦗" },
+  { name: "Spiders", emoji: "🕷️" },
+  { name: "Scorpions", emoji: "🦂" },
+  { name: "Turtles", emoji: "🐢" },
+  { name: "Cobras", emoji: "🐍" },
+  { name: "Geckos", emoji: "🦎" },
+  { name: "Raptors", emoji: "🦖" },
+  { name: "Brontos", emoji: "🦕" },
+  { name: "Octopi", emoji: "🐙" },
+  { name: "Squids", emoji: "🦑" },
+  { name: "Shrimp", emoji: "🦐" },
+  { name: "Lobsters", emoji: "🦞" },
+  { name: "Crabs", emoji: "🦀" },
+  { name: "Pufferfish", emoji: "🐡" },
+  { name: "Angelfish", emoji: "🐠" },
+  { name: "Minnows", emoji: "🐟" },
+  { name: "Dolphins", emoji: "🐬" },
+  { name: "Whales", emoji: "🐳" },
+  { name: "Sharks", emoji: "🦈" },
+  { name: "Gators", emoji: "🐊" },
+  { name: "Bengals", emoji: "🐅" },
+  { name: "Cheetahs", emoji: "🐆" },
+  { name: "Zebras", emoji: "🦓" },
+  { name: "Gorillas", emoji: "🦍" },
+  { name: "Orangutans", emoji: "🦧" },
+  { name: "Elephants", emoji: "🐘" },
+  { name: "Hippos", emoji: "🦛" },
+  { name: "Rhinos", emoji: "🦏" },
+  { name: "Camels", emoji: "🐪" },
+  { name: "Giraffes", emoji: "🦒" },
+  { name: "Kangaroos", emoji: "🦘" },
+  { name: "Bison", emoji: "🦬" },
+  { name: "Buffalo", emoji: "🐃" },
+  { name: "Oxen", emoji: "🐂" },
+  { name: "Holsteins", emoji: "🐄" },
+  { name: "Stallions", emoji: "🐎" },
+  { name: "Boars", emoji: "🐖" },
+  { name: "Rams", emoji: "🐏" },
+  { name: "Lambs", emoji: "🐑" },
+  { name: "Llamas", emoji: "🦙" },
+  { name: "Goats", emoji: "🐐" },
+  { name: "Reindeer", emoji: "🦌" },
+  { name: "Hounds", emoji: "🐕" },
+  { name: "Poodles", emoji: "🐩" },
+  { name: "Wildcats", emoji: "🐈" },
+  { name: "Turkeys", emoji: "🦃" },
+  { name: "Peacocks", emoji: "🦚" },
+  { name: "Parrots", emoji: "🦜" },
+  { name: "Swans", emoji: "🦢" },
+  { name: "Flamingos", emoji: "🦩" },
+  { name: "Doves", emoji: "🕊️" },
+  { name: "Jackrabbits", emoji: "🐇" },
+  { name: "Raccoons", emoji: "🦝" },
+  { name: "Skunks", emoji: "🦨" },
+  { name: "Badgers", emoji: "🦡" },
+  { name: "Beavers", emoji: "🦫" },
+  { name: "Otters", emoji: "🦦" },
+  { name: "Sloths", emoji: "🦥" },
+  { name: "Field Mice", emoji: "🐁" },
+  { name: "Pack Rats", emoji: "🐀" },
+  { name: "Chipmunks", emoji: "🐿️" },
+  { name: "Hedgehogs", emoji: "🦔" },
+  { name: "Dragons", emoji: "🐉" },
+  { name: "Dodos", emoji: "🦤" },
+  { name: "Seals", emoji: "🦭" },
+  { name: "Serpents", emoji: "🐲" },
+  { name: "Phoenix", emoji: "🔥" },
+  { name: "Rockets", emoji: "🚀" },
+  { name: "Comets", emoji: "☄️" },
+  { name: "Lightning", emoji: "⚡" },
+  { name: "Titans", emoji: "🗿" },
+  { name: "Ninjas", emoji: "🥷" },
+  { name: "Wizards", emoji: "🧙" },
+  { name: "Robots", emoji: "🤖" },
+  { name: "Aliens", emoji: "👽" },
+  { name: "Pirates", emoji: "🏴‍☠️" },
+  { name: "Vikings", emoji: "⚔️" },
+  { name: "Knights", emoji: "🛡️" },
+];
+
+// Fisher–Yates shuffle over a copy — never mutates MASCOTS.
+export function shuffle<T>(arr: readonly T[]): T[] {
+  const out = arr.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+// Pick `n` distinct random mascots (a fresh team pairing). Falls back to the
+// whole pool if `n` exceeds the list length.
+export function pickMascots(n: number): Mascot[] {
+  return shuffle(MASCOTS).slice(0, Math.min(n, MASCOTS.length));
+}

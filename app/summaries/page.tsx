@@ -21,9 +21,9 @@ export default function SummariesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1>Past Contests</h1>
+        <h1>Past Seasons</h1>
         {contests.length === 0 ? (
-          <p className="text-sm text-[#9fb0d3] mt-2">No archived contests yet.</p>
+          <p className="text-sm text-[#9fb0d3] mt-2">No past seasons yet.</p>
         ) : (
           <ul className="space-y-2 mt-2">
             {contests.map((c) => {
@@ -35,7 +35,7 @@ export default function SummariesPage() {
                   <div className="flex justify-between">
                     <div>
                       <div className="font-bold">{c.name}</div>
-                      <div className="text-xs text-[#9fb0d3]">{c.start_date ?? "—"} → {c.end_date ?? "—"} · {c.weeks ?? "?"} weeks</div>
+                      <div className="text-xs text-[#9fb0d3]">{c.start_date ?? "—"} → {c.end_date ?? "—"}{c.duration_months ? ` · ${c.duration_months} month${c.duration_months === 1 ? "" : "s"}` : c.weeks ? ` · ${c.weeks} weeks` : ""}</div>
                     </div>
                     {winner && <div className="text-right"><div className="text-xs text-[#9fb0d3]">Winner</div><div className="font-semibold">🏆 {winner.name}</div></div>}
                   </div>
