@@ -1,0 +1,44 @@
+name: Supabase Keep-Alive
+
+# Free-tier Supabase projects are paused after 7 consecutive days with zero
+# requests. This job makes one tiny read every 3 days so the inactivity timer
+# never runs out, regardless of how much the app is actually used.
+
+on:
+  schedule:
+    # Every 3 days at 12:00 UTC. Cron runs on UTC; the exact hour doesn't matter.
+    - cron: "0 12 */3 * *"
+  # Allow running it by hand from the Actions tab to confirm it works.
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase (lightweight select)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "::error::SUPABASE_URL or SUPABASE_ANON_KEY secret is not set."
+            exit 1
+          fi
+
+          # Read a single row from `teams` via PostgREST. `limit=1` keeps it cheap;
+          # `head=true` asks for headers only, so almost no data comes back.
+          status=$(curl -s -o /dev/null -w "%{http_code}" \
+            "${SUPABASE_URL}/rest/v1/teams?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            -H "Prefer: count=none")
+
+          echo "HTTP $status"
+
+          # 2xx = the database answered, which is all we need to reset the timer.
+          if [ "$status" -ge 200 ] && [ "$status" -lt 300 ]; then
+            echo "Keep-alive ping succeeded."
+          else
+            echo "::error::Keep-alive ping failed with HTTP $status."
+            exit 1
+          fi
