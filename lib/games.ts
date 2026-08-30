@@ -81,7 +81,7 @@ export const GAMES: GameDef[] = [
     short: "Two truths and a lie — Bible edition.",
     description:
       "Give three statements about a Bible story or person. Teams identify which one is false.",
-    ready: false,
+    ready: true,
   },
   {
     id: "bible_auction",
