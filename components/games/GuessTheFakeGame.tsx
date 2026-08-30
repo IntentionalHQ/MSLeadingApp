@@ -120,6 +120,8 @@ export default function GuessTheFakeGame({
           topic: r.topic,
           difficulty: (r.difficulty as Difficulty) ?? "medium",
           testament: r.testament ?? null,
+          reference: r.reference ?? "",
+          context: r.context ?? "",
           explanation: r.explanation ?? "",
           statements: [
             { text: r.statement_1, fake: r.fake_index === 1 },
@@ -289,6 +291,15 @@ export default function GuessTheFakeGame({
     <span className={"text-[10px] uppercase tracking-wide px-2 py-0.5 rounded font-bold " + DIFF_STYLE[d]}>{DIFF_LABEL[d]}</span>
   );
 
+  // Orientation for players — where this is in the Bible + a spoiler-free setup.
+  const RefContext = ({ q }: { q: Q }) =>
+    q.reference || q.context ? (
+      <div className="rounded-lg bg-[#0f1830] border border-[#22304f] px-3 py-2 text-center">
+        {q.reference && <div className="text-[11px] font-semibold text-blue-300">📖 {q.reference}</div>}
+        {q.context && <div className="text-xs text-[#9fb0d3] mt-0.5">{q.context}</div>}
+      </div>
+    ) : null;
+
   if (screen === "loading") {
     return (
       <div className="space-y-3">
@@ -345,6 +356,7 @@ export default function GuessTheFakeGame({
               <span className="text-xs uppercase text-[#9fb0d3]">{gCur.q.topic}</span>
               <DiffPill d={gCur.q.difficulty} />
             </div>
+            <RefContext q={gCur.q} />
             <div className="text-center text-sm text-[#9fb0d3]">Which statement is the fake?</div>
             <StatementList d={gCur} revealed={gRevealed} />
             {gRevealed && <div className="text-xs text-[#9fb0d3] text-center">💡 {gCur.q.explanation}</div>}
@@ -423,6 +435,7 @@ export default function GuessTheFakeGame({
             </div>
           ) : (
             <>
+              <RefContext q={d.q} />
               <div className="text-center text-sm">
                 <span className="font-bold text-white">{currentTeam.icon} {currentTeam.name}</span>
                 <span className="text-[#9fb0d3]"> — which statement is the fake?</span>

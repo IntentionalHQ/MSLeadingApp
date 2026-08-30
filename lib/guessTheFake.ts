@@ -8,6 +8,8 @@ export type FakeRound = {
   topic: string;
   difficulty: Difficulty;
   testament: "OT" | "NT" | null;
+  reference: string;
+  context: string;
   statements: FakeStatement[];
   explanation: string;
 };
@@ -17,6 +19,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Noah",
     difficulty: "easy",
     testament: "OT",
+    reference: "Genesis 6-9",
+    context: "God sends a flood but rescues one faithful family.",
     statements: [
       { text: "Noah brought his three sons — Shem, Ham, and Japheth — onto the ark.", fake: false },
       { text: "God set a rainbow in the sky as the sign of his promise after the flood.", fake: false },
@@ -28,6 +32,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Creation",
     difficulty: "easy",
     testament: "OT",
+    reference: "Genesis 1",
+    context: "God forms the world and everything in it, step by step.",
     statements: [
       { text: "God created light on the first day.", fake: false },
       { text: "God rested on the seventh day.", fake: false },
@@ -39,6 +45,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "David & Goliath",
     difficulty: "easy",
     testament: "OT",
+    reference: "1 Samuel 17",
+    context: "A shepherd boy steps onto the battlefield against a giant.",
     statements: [
       { text: "David defeated the giant Goliath with a sling and a stone.", fake: false },
       { text: "David played the harp to calm King Saul.", fake: false },
@@ -50,6 +58,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Jonah",
     difficulty: "easy",
     testament: "OT",
+    reference: "Jonah 1-4",
+    context: "God calls a prophet to carry a message to the city of Nineveh.",
     statements: [
       { text: "Jonah was swallowed by a great fish and stayed inside three days and nights.", fake: false },
       { text: "God told Jonah to preach to the city of Nineveh.", fake: false },
@@ -61,6 +71,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Jesus' Birth",
     difficulty: "easy",
     testament: "NT",
+    reference: "Luke 2; Matthew 2",
+    context: "The night Jesus is born and those who come to see him.",
     statements: [
       { text: "Jesus was born in Bethlehem.", fake: false },
       { text: "An angel announced the good news to shepherds in the fields.", fake: false },
@@ -72,6 +84,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Adam & Eve",
     difficulty: "easy",
     testament: "OT",
+    reference: "Genesis 2-3",
+    context: "The first people and their choice in the Garden of Eden.",
     statements: [
       { text: "God placed Adam and Eve in the Garden of Eden.", fake: false },
       { text: "A serpent tempted Eve to eat the forbidden fruit.", fake: false },
@@ -83,6 +97,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Daniel",
     difficulty: "easy",
     testament: "OT",
+    reference: "Daniel 1; 6",
+    context: "A faithful young man stays true to God in a foreign royal court.",
     statements: [
       { text: "Daniel was thrown into a den of lions and was unharmed.", fake: false },
       { text: "Daniel chose to eat vegetables and water instead of the king's rich food.", fake: false },
@@ -94,6 +110,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Ten Commandments",
     difficulty: "easy",
     testament: "OT",
+    reference: "Exodus 20",
+    context: "God gives his people the laws they are to live by.",
     statements: [
       { text: "God gave Moses the commandments on Mount Sinai.", fake: false },
       { text: "The commandments were written on tablets of stone.", fake: false },
@@ -105,6 +123,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Jesus' Miracles",
     difficulty: "easy",
     testament: "NT",
+    reference: "John 2; Matthew 14",
+    context: "A look at some of the signs and wonders Jesus performed.",
     statements: [
       { text: "Jesus fed over 5,000 people with five loaves and two fish.", fake: false },
       { text: "Jesus turned water into wine at a wedding in Cana.", fake: false },
@@ -116,6 +136,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Resurrection",
     difficulty: "easy",
     testament: "NT",
+    reference: "Matthew 28; John 20",
+    context: "Easter morning, when the tomb is found empty.",
     statements: [
       { text: "Jesus rose from the dead on the third day.", fake: false },
       { text: "An angel rolled the stone away from the tomb.", fake: false },
@@ -127,6 +149,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Samson",
     difficulty: "easy",
     testament: "OT",
+    reference: "Judges 13-16",
+    context: "A judge of Israel set apart with extraordinary strength.",
     statements: [
       { text: "Samson's great strength was connected to his uncut hair.", fake: false },
       { text: "Delilah discovered the secret of Samson's strength.", fake: false },
@@ -138,6 +162,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Joseph",
     difficulty: "easy",
     testament: "OT",
+    reference: "Genesis 37-45",
+    context: "Jacob's favored son, betrayed by his brothers, rises in Egypt.",
     statements: [
       { text: "Joseph's brothers sold him into slavery in Egypt.", fake: false },
       { text: "Joseph interpreted Pharaoh's dreams about seven years of plenty and famine.", fake: false },
@@ -149,6 +175,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Moses",
     difficulty: "easy",
     testament: "OT",
+    reference: "Exodus 2-3; Deuteronomy 34",
+    context: "The leader God chose to free Israel from Egypt.",
     statements: [
       { text: "As a baby, Moses was placed in a basket on the Nile and found by Pharaoh's daughter.", fake: false },
       { text: "Moses saw a bush that was burning but was not burned up.", fake: false },
@@ -160,6 +188,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Palm Sunday",
     difficulty: "easy",
     testament: "NT",
+    reference: "Matthew 21",
+    context: "Jesus arrives in Jerusalem to the cheers of the crowds.",
     statements: [
       { text: "Jesus rode into Jerusalem on a donkey.", fake: false },
       { text: "Crowds spread palm branches and cloaks on the road.", fake: false },
@@ -171,6 +201,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Good Samaritan",
     difficulty: "easy",
     testament: "NT",
+    reference: "Luke 10",
+    context: "A parable about a traveler left hurt on a dangerous road.",
     statements: [
       { text: "A man was beaten by robbers and left on the road.", fake: false },
       { text: "A Samaritan stopped to help him after others passed by.", fake: false },
@@ -182,6 +214,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Wise & Foolish Builders",
     difficulty: "easy",
     testament: "NT",
+    reference: "Matthew 7",
+    context: "A short parable about two builders and where they build.",
     statements: [
       { text: "The wise man built his house on the rock.", fake: false },
       { text: "The foolish man built his house on the sand.", fake: false },
@@ -193,6 +227,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Lost Sheep",
     difficulty: "easy",
     testament: "NT",
+    reference: "Luke 15",
+    context: "A parable about a shepherd missing one of his flock.",
     statements: [
       { text: "The shepherd left the ninety-nine to search for one lost sheep.", fake: false },
       { text: "He rejoiced and carried it home when he found it.", fake: false },
@@ -204,6 +240,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Peter",
     difficulty: "medium",
     testament: "NT",
+    reference: "Matthew 14; 26",
+    context: "One of Jesus' twelve disciples and their frequent spokesman.",
     statements: [
       { text: "Peter denied knowing Jesus three times before the rooster crowed.", fake: false },
       { text: "Peter walked on water toward Jesus before he began to sink.", fake: false },
@@ -215,6 +253,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "John the Baptist",
     difficulty: "medium",
     testament: "NT",
+    reference: "Matthew 3; Luke 1",
+    context: "The prophet who prepared the way for Jesus.",
     statements: [
       { text: "John baptized people in the Jordan River.", fake: false },
       { text: "John ate locusts and wild honey.", fake: false },
@@ -226,6 +266,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Abraham",
     difficulty: "medium",
     testament: "OT",
+    reference: "Genesis 15-22",
+    context: "God's promise to make a great nation from one man.",
     statements: [
       { text: "God promised Abraham descendants as numerous as the stars.", fake: false },
       { text: "Abraham was willing to sacrifice his son Isaac before God stopped him.", fake: false },
@@ -237,6 +279,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Paul",
     difficulty: "medium",
     testament: "NT",
+    reference: "Acts 9",
+    context: "A leading apostle who carried the gospel across the world.",
     statements: [
       { text: "Paul was blinded by a bright light on the road to Damascus.", fake: false },
       { text: "Paul wrote many of the letters found in the New Testament.", fake: false },
@@ -248,6 +292,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Tower of Babel",
     difficulty: "medium",
     testament: "OT",
+    reference: "Genesis 11",
+    context: "People unite to build a tower reaching to the heavens.",
     statements: [
       { text: "The people built a tall tower to try to reach the heavens.", fake: false },
       { text: "God confused their language so they couldn't understand each other.", fake: false },
@@ -259,6 +305,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Queen Esther",
     difficulty: "medium",
     testament: "OT",
+    reference: "Esther 4-7",
+    context: "A queen faces a deadly plot against her people.",
     statements: [
       { text: "Esther became queen of Persia.", fake: false },
       { text: "Esther risked her life to save her people, the Jews.", fake: false },
@@ -270,6 +318,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Solomon",
     difficulty: "medium",
     testament: "OT",
+    reference: "1 Kings 3-6",
+    context: "One of Israel's greatest kings, the son of David.",
     statements: [
       { text: "Solomon asked God for wisdom.", fake: false },
       { text: "Solomon built the first temple in Jerusalem.", fake: false },
@@ -281,6 +331,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Plagues of Egypt",
     difficulty: "medium",
     testament: "OT",
+    reference: "Exodus 7-12",
+    context: "God sends a series of plagues to free his people.",
     statements: [
       { text: "One plague turned the Nile River to blood.", fake: false },
       { text: "The final plague was the death of the firstborn.", fake: false },
@@ -292,6 +344,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Jesus' Disciples",
     difficulty: "medium",
     testament: "NT",
+    reference: "Matthew 10; 26",
+    context: "The twelve men Jesus chose to follow him closely.",
     statements: [
       { text: "Jesus chose twelve disciples.", fake: false },
       { text: "Several of Jesus' disciples were fishermen.", fake: false },
@@ -303,6 +357,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Exodus",
     difficulty: "medium",
     testament: "OT",
+    reference: "Exodus 16; Numbers 14",
+    context: "Israel's long journey through the wilderness.",
     statements: [
       { text: "The Israelites ate manna in the wilderness.", fake: false },
       { text: "God led them with a pillar of cloud by day and fire by night.", fake: false },
@@ -314,6 +370,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Fall of Jericho",
     difficulty: "medium",
     testament: "OT",
+    reference: "Joshua 6",
+    context: "Israel's first battle in the Promised Land.",
     statements: [
       { text: "The Israelites marched around Jericho once a day for six days.", fake: false },
       { text: "On the seventh day they marched around it seven times.", fake: false },
@@ -325,6 +383,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Ruth",
     difficulty: "medium",
     testament: "OT",
+    reference: "Ruth 1-4",
+    context: "A loyal widow's story from the days of the judges.",
     statements: [
       { text: "Ruth was a Moabite who stayed loyal to her mother-in-law Naomi.", fake: false },
       { text: "Ruth gleaned grain in the fields of Boaz.", fake: false },
@@ -336,6 +396,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Cain & Abel",
     difficulty: "medium",
     testament: "OT",
+    reference: "Genesis 4",
+    context: "The first two brothers and their offerings to God.",
     statements: [
       { text: "Cain and Abel were the first sons of Adam and Eve.", fake: false },
       { text: "Cain became jealous and killed his brother Abel.", fake: false },
@@ -347,6 +409,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Joseph's Dreams",
     difficulty: "medium",
     testament: "OT",
+    reference: "Genesis 37",
+    context: "The dreams of a young man that stir his brothers' anger.",
     statements: [
       { text: "Joseph dreamed the sun, moon, and eleven stars bowed down to him.", fake: false },
       { text: "Joseph's brothers threw him into a pit.", fake: false },
@@ -358,6 +422,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Baptism of Jesus",
     difficulty: "medium",
     testament: "NT",
+    reference: "Matthew 3; Mark 1",
+    context: "The day Jesus is baptized as his ministry begins.",
     statements: [
       { text: "John baptized Jesus in the Jordan River.", fake: false },
       { text: "The Holy Spirit descended on Jesus like a dove.", fake: false },
@@ -369,6 +435,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Temptation of Jesus",
     difficulty: "medium",
     testament: "NT",
+    reference: "Matthew 4; Luke 4",
+    context: "Jesus is tested in the wilderness.",
     statements: [
       { text: "Jesus fasted forty days in the wilderness.", fake: false },
       { text: "Satan tempted Jesus three times.", fake: false },
@@ -380,6 +448,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Lazarus",
     difficulty: "medium",
     testament: "NT",
+    reference: "John 11",
+    context: "Two sisters grieve their brother and send for Jesus.",
     statements: [
       { text: "Jesus wept before raising Lazarus.", fake: false },
       { text: "Lazarus had been in the tomb four days.", fake: false },
@@ -391,6 +461,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Sermon on the Mount",
     difficulty: "medium",
     testament: "NT",
+    reference: "Matthew 5-7",
+    context: "Jesus' most famous block of teaching to his followers.",
     statements: [
       { text: "Jesus taught the Beatitudes ('Blessed are...').", fake: false },
       { text: "Jesus taught the Lord's Prayer.", fake: false },
@@ -402,6 +474,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Zacchaeus",
     difficulty: "medium",
     testament: "NT",
+    reference: "Luke 19",
+    context: "A tax collector climbs to catch a glimpse of Jesus.",
     statements: [
       { text: "Zacchaeus was a wealthy tax collector.", fake: false },
       { text: "Zacchaeus climbed a sycamore tree to see Jesus.", fake: false },
@@ -413,6 +487,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Prodigal Son",
     difficulty: "medium",
     testament: "NT",
+    reference: "Luke 15",
+    context: "A parable about a son who leaves home with his inheritance.",
     statements: [
       { text: "The younger son demanded his inheritance early.", fake: false },
       { text: "He wasted it and ended up feeding pigs.", fake: false },
@@ -424,6 +500,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Feeding the 5,000",
     difficulty: "medium",
     testament: "NT",
+    reference: "Matthew 14; John 6",
+    context: "Jesus feeds a huge crowd from a small lunch.",
     statements: [
       { text: "A boy's five loaves and two fish were used in the miracle.", fake: false },
       { text: "Twelve baskets of leftovers were gathered afterward.", fake: false },
@@ -435,6 +513,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Nicodemus",
     difficulty: "medium",
     testament: "NT",
+    reference: "John 3",
+    context: "A man comes to Jesus at night with deep questions.",
     statements: [
       { text: "Nicodemus was a Pharisee who came to Jesus at night.", fake: false },
       { text: "Jesus told him he must be 'born again.'", fake: false },
@@ -446,6 +526,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Gideon",
     difficulty: "medium",
     testament: "OT",
+    reference: "Judges 6-7",
+    context: "God calls an unlikely hero to rescue Israel.",
     statements: [
       { text: "Gideon tested God with a wool fleece.", fake: false },
       { text: "Gideon's army was reduced to just 300 men.", fake: false },
@@ -457,6 +539,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Job",
     difficulty: "medium",
     testament: "OT",
+    reference: "Job 1-2; 42",
+    context: "A blameless man loses everything and is tested.",
     statements: [
       { text: "Job lost his children, wealth, and health.", fake: false },
       { text: "Job's friends came to comfort him but ended up accusing him.", fake: false },
@@ -468,6 +552,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Mary & Martha",
     difficulty: "medium",
     testament: "NT",
+    reference: "Luke 10",
+    context: "Jesus visits the home of two sisters.",
     statements: [
       { text: "Martha was busy serving while Mary sat at Jesus' feet.", fake: false },
       { text: "Jesus said Mary had chosen what is better.", fake: false },
@@ -479,6 +565,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Sower",
     difficulty: "medium",
     testament: "NT",
+    reference: "Matthew 13",
+    context: "A parable about a farmer scattering seed on different ground.",
     statements: [
       { text: "Some seed fell on the path and the birds ate it.", fake: false },
       { text: "Some seed fell on good soil and produced a crop.", fake: false },
@@ -490,6 +578,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Last Supper",
     difficulty: "medium",
     testament: "NT",
+    reference: "Matthew 26; John 13",
+    context: "Jesus shares a final meal with his disciples.",
     statements: [
       { text: "Jesus shared bread and wine with his disciples.", fake: false },
       { text: "Jesus washed the disciples' feet.", fake: false },
@@ -501,6 +591,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Crucifixion",
     difficulty: "medium",
     testament: "NT",
+    reference: "Matthew 27; John 19",
+    context: "The hours of Jesus' death on the cross.",
     statements: [
       { text: "Jesus was crucified between two criminals.", fake: false },
       { text: "Darkness covered the land for three hours.", fake: false },
@@ -512,6 +604,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Doubting Thomas",
     difficulty: "medium",
     testament: "NT",
+    reference: "John 20",
+    context: "One disciple struggles to believe the others' news.",
     statements: [
       { text: "Thomas doubted that Jesus had risen.", fake: false },
       { text: "Thomas wanted to see the nail marks in Jesus' hands.", fake: false },
@@ -523,6 +617,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Saul's Conversion",
     difficulty: "medium",
     testament: "NT",
+    reference: "Acts 9",
+    context: "A fierce enemy of the church meets Jesus on the road.",
     statements: [
       { text: "Before his conversion, Saul persecuted Christians.", fake: false },
       { text: "He heard Jesus ask, 'Why do you persecute me?'", fake: false },
@@ -534,6 +630,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Fiery Furnace",
     difficulty: "medium",
     testament: "OT",
+    reference: "Daniel 3",
+    context: "Three friends refuse to bow to a king's golden statue.",
     statements: [
       { text: "Shadrach, Meshach, and Abednego refused to bow to the golden statue.", fake: false },
       { text: "They were thrown into a blazing furnace.", fake: false },
@@ -545,6 +643,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Golden Calf",
     difficulty: "medium",
     testament: "OT",
+    reference: "Exodus 32",
+    context: "While Moses is on the mountain, the people grow restless.",
     statements: [
       { text: "The Israelites made a golden calf to worship.", fake: false },
       { text: "Moses broke the stone tablets in anger.", fake: false },
@@ -556,6 +656,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Wise Men",
     difficulty: "medium",
     testament: "NT",
+    reference: "Matthew 2",
+    context: "Visitors from the east follow a star to find Jesus.",
     statements: [
       { text: "The wise men followed a star from the east.", fake: false },
       { text: "They brought gold, frankincense, and myrrh.", fake: false },
@@ -567,6 +669,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Woman at the Well",
     difficulty: "medium",
     testament: "NT",
+    reference: "John 4",
+    context: "Jesus stops to talk with a woman drawing water.",
     statements: [
       { text: "Jesus spoke with a Samaritan woman at a well.", fake: false },
       { text: "Jesus offered her 'living water.'", fake: false },
@@ -578,6 +682,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Rich Young Ruler",
     difficulty: "medium",
     testament: "NT",
+    reference: "Mark 10",
+    context: "A wealthy man asks Jesus about eternal life.",
     statements: [
       { text: "A rich young man asked Jesus how to gain eternal life.", fake: false },
       { text: "Jesus told him to sell his possessions and give to the poor.", fake: false },
@@ -589,6 +695,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Mary Magdalene",
     difficulty: "medium",
     testament: "NT",
+    reference: "John 20",
+    context: "One of the women closest to Jesus during his ministry.",
     statements: [
       { text: "Mary Magdalene came to the tomb on Easter morning.", fake: false },
       { text: "She was one of the first to see the risen Jesus.", fake: false },
@@ -600,6 +708,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Ten Lepers",
     difficulty: "medium",
     testament: "NT",
+    reference: "Luke 17",
+    context: "Ten sick men cry out to Jesus for healing.",
     statements: [
       { text: "Jesus healed ten men who had leprosy.", fake: false },
       { text: "Only one of them returned to thank Jesus.", fake: false },
@@ -611,6 +721,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Paralyzed Man",
     difficulty: "medium",
     testament: "NT",
+    reference: "Mark 2",
+    context: "Friends go to great lengths to bring a man to Jesus.",
     statements: [
       { text: "Friends lowered a paralyzed man through a roof to reach Jesus.", fake: false },
       { text: "Jesus forgave the man's sins and healed him.", fake: false },
@@ -622,6 +734,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Jacob & Esau",
     difficulty: "medium",
     testament: "OT",
+    reference: "Genesis 25; 27",
+    context: "Twin brothers struggle over blessing and birthright.",
     statements: [
       { text: "Esau sold his birthright for a bowl of stew.", fake: false },
       { text: "Jacob tricked his father Isaac to steal the blessing.", fake: false },
@@ -633,6 +747,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Isaac",
     difficulty: "medium",
     testament: "OT",
+    reference: "Genesis 21-24",
+    context: "The long-promised son of Abraham and Sarah.",
     statements: [
       { text: "Isaac was the son God promised to Abraham and Sarah.", fake: false },
       { text: "Isaac married Rebekah.", fake: false },
@@ -644,6 +760,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Aaron",
     difficulty: "medium",
     testament: "OT",
+    reference: "Exodus 4; 32",
+    context: "Moses' right-hand man during the exodus.",
     statements: [
       { text: "Aaron was the first high priest of Israel.", fake: false },
       { text: "Aaron made a golden calf while Moses was on the mountain.", fake: false },
@@ -655,6 +773,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Methuselah",
     difficulty: "hard",
     testament: "OT",
+    reference: "Genesis 5",
+    context: "The long genealogy from Adam through the early generations.",
     statements: [
       { text: "Methuselah lived 969 years, longer than anyone else in the Bible.", fake: false },
       { text: "Enoch was taken by God and did not see death.", fake: false },
@@ -666,6 +786,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Kings of Israel",
     difficulty: "hard",
     testament: "OT",
+    reference: "1 Samuel 8-10",
+    context: "How Israel first came to have kings.",
     statements: [
       { text: "Saul was the first king of Israel.", fake: false },
       { text: "After Solomon died, the kingdom split into Israel and Judah.", fake: false },
@@ -677,6 +799,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Prophets",
     difficulty: "hard",
     testament: "OT",
+    reference: "Old Testament prophets",
+    context: "A quick tour of several Old Testament prophets.",
     statements: [
       { text: "Isaiah prophesied about a coming Messiah.", fake: false },
       { text: "Jeremiah is known as the 'weeping prophet.'", fake: false },
@@ -688,6 +812,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Ark of the Covenant",
     difficulty: "hard",
     testament: "OT",
+    reference: "Exodus 25; Numbers 4",
+    context: "The sacred golden chest at the center of Israel's worship.",
     statements: [
       { text: "The ark held the stone tablets of the commandments.", fake: false },
       { text: "It also contained Aaron's rod that budded and a jar of manna.", fake: false },
@@ -699,6 +825,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Twelve Tribes",
     difficulty: "hard",
     testament: "OT",
+    reference: "Genesis 49",
+    context: "The sons of Jacob who became the tribes of Israel.",
     statements: [
       { text: "The twelve tribes came from the sons of Jacob.", fake: false },
       { text: "Jacob's name was changed to Israel.", fake: false },
@@ -710,6 +838,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Pentecost",
     difficulty: "hard",
     testament: "NT",
+    reference: "Acts 2",
+    context: "The Holy Spirit comes on the believers in Jerusalem.",
     statements: [
       { text: "The Holy Spirit came at Pentecost with a sound like rushing wind.", fake: false },
       { text: "What looked like tongues of fire rested on the believers.", fake: false },
@@ -721,6 +851,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Stephen",
     difficulty: "hard",
     testament: "NT",
+    reference: "Acts 6-7",
+    context: "The first follower of Jesus to die for his faith.",
     statements: [
       { text: "Stephen was the first Christian martyr.", fake: false },
       { text: "Stephen was stoned to death.", fake: false },
@@ -732,6 +864,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Philip & the Ethiopian",
     difficulty: "hard",
     testament: "NT",
+    reference: "Acts 8",
+    context: "Philip meets a foreign official reading Scripture on a road.",
     statements: [
       { text: "Philip explained the Scriptures to an Ethiopian official.", fake: false },
       { text: "Philip baptized the Ethiopian.", fake: false },
@@ -743,6 +877,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Deborah",
     difficulty: "hard",
     testament: "OT",
+    reference: "Judges 4-5",
+    context: "A prophetess leads Israel in a time of danger.",
     statements: [
       { text: "Deborah was a prophetess and a judge of Israel.", fake: false },
       { text: "Deborah led Israel to victory alongside the commander Barak.", fake: false },
@@ -754,6 +890,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Joshua",
     difficulty: "hard",
     testament: "OT",
+    reference: "Joshua 3; 10",
+    context: "Moses' successor leads Israel into the Promised Land.",
     statements: [
       { text: "Joshua took over as leader of Israel after Moses.", fake: false },
       { text: "God made the sun stand still during one of Joshua's battles.", fake: false },
@@ -765,6 +903,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Talents",
     difficulty: "hard",
     testament: "NT",
+    reference: "Matthew 25",
+    context: "A parable about servants entrusted with their master's money.",
     statements: [
       { text: "Three servants were entrusted with talents to invest.", fake: false },
       { text: "The servant who buried his talent was rebuked.", fake: false },
@@ -776,6 +916,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Transfiguration",
     difficulty: "hard",
     testament: "NT",
+    reference: "Matthew 17",
+    context: "Jesus is revealed in glory on a mountaintop.",
     statements: [
       { text: "Jesus' face and clothes shone with dazzling light on the mountain.", fake: false },
       { text: "A voice from the cloud said, 'This is my Son; listen to him.'", fake: false },
@@ -787,6 +929,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Garden of Gethsemane",
     difficulty: "hard",
     testament: "NT",
+    reference: "Matthew 26",
+    context: "Jesus prays in a garden on the night he is arrested.",
     statements: [
       { text: "Jesus prayed so intensely his sweat was like drops of blood.", fake: false },
       { text: "The disciples kept falling asleep while Jesus prayed.", fake: false },
@@ -798,6 +942,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Road to Emmaus",
     difficulty: "hard",
     testament: "NT",
+    reference: "Luke 24",
+    context: "Two followers meet a stranger on the road after Easter.",
     statements: [
       { text: "Two followers walked to Emmaus after the resurrection.", fake: false },
       { text: "Jesus walked with them but they didn't recognize him at first.", fake: false },
@@ -809,6 +955,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "The Ascension",
     difficulty: "hard",
     testament: "NT",
+    reference: "Acts 1",
+    context: "Jesus' final moments with his disciples before heaven.",
     statements: [
       { text: "Jesus was taken up into heaven in a cloud.", fake: false },
       { text: "Angels said he would return the same way he left.", fake: false },
@@ -820,6 +968,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Belshazzar's Feast",
     difficulty: "hard",
     testament: "OT",
+    reference: "Daniel 5",
+    context: "A king's banquet is interrupted by a strange sign.",
     statements: [
       { text: "A mysterious hand wrote words on the wall during a royal feast.", fake: false },
       { text: "Daniel was called in to interpret the writing.", fake: false },
@@ -831,6 +981,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Nebuchadnezzar",
     difficulty: "hard",
     testament: "OT",
+    reference: "Daniel 2; 4",
+    context: "A powerful king has troubling dreams and is humbled.",
     statements: [
       { text: "Nebuchadnezzar had a dream of a great statue made of different metals.", fake: false },
       { text: "He was humbled and lived like a wild animal, eating grass.", fake: false },
@@ -842,6 +994,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Rebekah",
     difficulty: "hard",
     testament: "OT",
+    reference: "Genesis 24-25",
+    context: "The wife chosen for Isaac at a well.",
     statements: [
       { text: "Rebekah drew water for Abraham's servant and his camels.", fake: false },
       { text: "Rebekah became the wife of Isaac.", fake: false },
@@ -853,6 +1007,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Jacob's Ladder",
     difficulty: "hard",
     testament: "OT",
+    reference: "Genesis 28",
+    context: "Jacob falls asleep and dreams of heaven.",
     statements: [
       { text: "Jacob dreamed of a ladder or stairway reaching up to heaven.", fake: false },
       { text: "Angels were going up and down on it.", fake: false },
@@ -864,6 +1020,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Miriam",
     difficulty: "hard",
     testament: "OT",
+    reference: "Exodus 15; Numbers 12",
+    context: "The sister of Moses and a leader among Israel's women.",
     statements: [
       { text: "Miriam was the sister of Moses and Aaron.", fake: false },
       { text: "Miriam led the women in song after crossing the Red Sea.", fake: false },
@@ -875,6 +1033,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Balaam",
     difficulty: "hard",
     testament: "OT",
+    reference: "Numbers 22",
+    context: "On his journey, this man encounters far more than he expected.",
     statements: [
       { text: "Balaam's donkey spoke to him with a human voice.", fake: false },
       { text: "An angel with a drawn sword blocked Balaam's path.", fake: false },
@@ -886,6 +1046,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Nehemiah",
     difficulty: "hard",
     testament: "OT",
+    reference: "Nehemiah 2-6",
+    context: "Rebuilding the broken-down walls of Jerusalem.",
     statements: [
       { text: "Nehemiah led the effort to rebuild the walls of Jerusalem.", fake: false },
       { text: "The workers built with a tool in one hand and a weapon in the other.", fake: false },
@@ -897,6 +1059,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Ezra",
     difficulty: "hard",
     testament: "OT",
+    reference: "Ezra 7; Nehemiah 8",
+    context: "A scribe helps God's people return to his law.",
     statements: [
       { text: "Ezra was a scribe who taught the people God's law.", fake: false },
       { text: "Ezra read the law aloud to the assembled people.", fake: false },
@@ -908,6 +1072,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Simeon & Anna",
     difficulty: "hard",
     testament: "NT",
+    reference: "Luke 2",
+    context: "Two devout elders who had long awaited the Messiah.",
     statements: [
       { text: "Simeon held the baby Jesus in the temple and praised God.", fake: false },
       { text: "Anna was an elderly prophetess who gave thanks for the child.", fake: false },
@@ -919,6 +1085,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Blind Bartimaeus",
     difficulty: "hard",
     testament: "NT",
+    reference: "Mark 10",
+    context: "A blind beggar calls out to Jesus by the roadside.",
     statements: [
       { text: "Bartimaeus was a blind beggar sitting by the road.", fake: false },
       { text: "He cried out, 'Jesus, Son of David, have mercy on me!'", fake: false },
@@ -930,6 +1098,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Jairus' Daughter",
     difficulty: "hard",
     testament: "NT",
+    reference: "Mark 5",
+    context: "A desperate father begs Jesus to help his sick child.",
     statements: [
       { text: "Jairus begged Jesus to come heal his dying daughter.", fake: false },
       { text: "Jesus said the girl was only sleeping.", fake: false },
@@ -941,6 +1111,8 @@ export const GUESS_THE_FAKE_ROUNDS: FakeRound[] = [
     topic: "Elisha",
     difficulty: "hard",
     testament: "OT",
+    reference: "2 Kings 2-6",
+    context: "The prophet who took up Elijah's mantle.",
     statements: [
       { text: "Elisha received a double portion of Elijah's spirit.", fake: false },
       { text: "Elisha made a lost axe head float to the surface of the water.", fake: false },
