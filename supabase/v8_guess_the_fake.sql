@@ -17,15 +17,16 @@ create table if not exists gtf_questions (
   active boolean not null default true,
   created_at timestamptz not null default now()
 );
+
+-- Unique topic lets the seed below be re-run safely (on conflict do nothing).
+create unique index if not exists gtf_questions_topic_key on gtf_questions (topic);
 create index if not exists gtf_questions_active_idx on gtf_questions (active, difficulty);
 
--- RLS disabled to match the app's other game tables (see game_prompts).
+-- RLS disabled to match the other game tables (see game_prompts).
 alter table gtf_questions disable row level security;
 
 -- Seed the 85-round bank. Re-running is safe: existing topics are skipped.
-insert into gtf_questions (topic, difficulty, testament, statement_1, statement_2, statement_3, fake_index, explanation)
-select v.topic, v.difficulty, v.testament, v.statement_1, v.statement_2, v.statement_3, v.fake_index, v.explanation
-from (values
+insert into gtf_questions (topic, difficulty, testament, statement_1, statement_2, statement_3, fake_index, explanation) values
   ('Noah', 'easy', 'OT', 'Noah brought his three sons — Shem, Ham, and Japheth — onto the ark.', 'God set a rainbow in the sky as the sign of his promise after the flood.', 'The flood rain lasted exactly 100 days and 100 nights.', 3, 'It rained 40 days and 40 nights, not 100.'),
   ('Creation', 'easy', 'OT', 'God created light on the first day.', 'God rested on the seventh day.', 'God created the sun, moon, and stars on the second day.', 3, 'The sun, moon, and stars were made on the fourth day.'),
   ('David & Goliath', 'easy', 'OT', 'David defeated the giant Goliath with a sling and a stone.', 'David played the harp to calm King Saul.', 'David built the temple in Jerusalem.', 3, 'His son Solomon built the temple, not David.'),
@@ -111,5 +112,4 @@ from (values
   ('Blind Bartimaeus', 'hard', 'NT', 'Bartimaeus was a blind beggar sitting by the road.', 'He cried out, ''Jesus, Son of David, have mercy on me!''', 'Jesus healed him by covering his eyes with gold coins.', 3, 'Jesus healed him and said his faith had made him well.'),
   ('Jairus'' Daughter', 'hard', 'NT', 'Jairus begged Jesus to come heal his dying daughter.', 'Jesus said the girl was only sleeping.', 'Jesus arrived too late and could not help the girl.', 3, 'Jesus raised her, saying, ''Little girl, get up.'''),
   ('Elisha', 'hard', 'OT', 'Elisha received a double portion of Elijah''s spirit.', 'Elisha made a lost axe head float to the surface of the water.', 'Elisha was eaten by lions for mocking a group of children.', 3, 'It was youths who mocked Elisha, and bears (not lions) that came out.')
-) as v(topic, difficulty, testament, statement_1, statement_2, statement_3, fake_index, explanation)
-where not exists (select 1 from gtf_questions g where g.topic = v.topic);
+on conflict (topic) do nothing;
