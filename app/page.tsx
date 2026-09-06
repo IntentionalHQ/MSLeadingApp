@@ -73,25 +73,6 @@ export default function Home() {
         )}
         <Link href="/itineraries" className="btn btn-ghost w-full mt-3">View all Sundays</Link>
       </div>
-
-      <div className="grid grid-cols-4 gap-3">
-        <Link href="/games" className="card p-4 text-center">
-          <div className="text-2xl">🎮</div>
-          <div className="font-semibold mt-1 text-sm">Games</div>
-        </Link>
-        <Link href="/teams" className="card p-4 text-center">
-          <div className="text-2xl">🏆</div>
-          <div className="font-semibold mt-1 text-sm">Teams</div>
-        </Link>
-        <Link href="/summaries" className="card p-4 text-center">
-          <div className="text-2xl">📜</div>
-          <div className="font-semibold mt-1 text-sm">History</div>
-        </Link>
-        <Link href="/admin" className="card p-4 text-center">
-          <div className="text-2xl">❓</div>
-          <div className="font-semibold mt-1 text-sm">Questions</div>
-        </Link>
-      </div>
     </div>
   );
 }
