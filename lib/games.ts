@@ -1,6 +1,7 @@
 export type GameId =
   | "bible_baseball"
   | "four_corners"
+  | "true_false_showdown"
   | "bible_taboo"
   | "bible_hangman"
   | "bible_hot_seat"
@@ -8,7 +9,9 @@ export type GameId =
   | "guess_the_fake"
   | "bible_auction"
   | "bible_price_is_right"
-  | "bible_shooting_range";
+  | "bible_shooting_range"
+  | "verse_scramble"
+  | "verse_hunt";
 
 export type GameDef = {
   id: GameId;
@@ -36,6 +39,15 @@ export const GAMES: GameDef[] = [
     short: "Students move to the corner of their answer choice.",
     description:
       "Each corner is an answer choice. Students move to the corner they think is correct, then you reveal the answer.",
+    ready: true,
+  },
+  {
+    id: "true_false_showdown",
+    label: "True or False Showdown",
+    icon: "⚖️",
+    short: "Pick a side — true or false. Wrong answers sit; last one standing wins.",
+    description:
+      "Like Four Corners, but two sides: TRUE and FALSE. Read a statement; students move to the side they believe. Reveal the answer — everyone on the wrong side sits down and watches. Keep going until one student is left standing. Ships with 200+ Bible statements that ramp from easy to hard.",
     ready: true,
   },
   {
@@ -109,6 +121,24 @@ export const GAMES: GameDef[] = [
     description:
       "Set up cups labeled A, B, and C as answer choices. Students shoot at the cup matching their answer; correct shots earn a point. Keep cups close together so accuracy matters. Highest total wins.",
     ready: false,
+  },
+  {
+    id: "verse_scramble",
+    label: "Verse Scramble",
+    icon: "🔀",
+    short: "Race to put the week's memory verse back in order.",
+    description:
+      "The week's memory verse is shuffled word by word. Teams race to arrange the words back into the correct order. Reinforces the verse with zero prep — it uses the verse already in the Sunday plan.",
+    ready: false,
+  },
+  {
+    id: "verse_hunt",
+    label: "Verse Hunt",
+    icon: "🔦",
+    short: "Race to find any verse that fits the category the leader calls.",
+    description:
+      "A twist on the Sword Drill. The leader calls a broad category (\"a verse with an animal in it\"). Teams search their Bibles together; the first person with a verse that fits stands and reads it. If the judge approves, that team scores. A per-round timer means a too-hard prompt just ends in a tie. Ships with 200+ prompts — no prep, no props.",
+    ready: true,
   },
 ];
 
