@@ -92,7 +92,7 @@ export default function VerseCheckPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {teams.map((t) => {
           const teamStudents = students.filter((s) => s.team_id === t.id);
           const count = teamStudents.filter((s) => done.has(s.id)).length;
@@ -113,7 +113,7 @@ export default function VerseCheckPage() {
               <ul className="mt-2 space-y-1">
                 {teamStudents.map((s) => (
                   <li key={s.id}>
-                    <button onClick={() => toggle(s.id)} className={"w-full text-left p-2 rounded " + (done.has(s.id) ? "bg-green-700/40 border border-green-500" : "bg-[#0b1220] border border-[#1f2a44]")}>
+                    <button onClick={() => toggle(s.id)} className={"w-full text-left p-3 rounded-lg text-base " + (done.has(s.id) ? "bg-green-700/40 border border-green-500" : "bg-[#0b1220] border border-[#1f2a44]")}>
                       {done.has(s.id) ? "✅ " : "☐ "}{s.name}
                     </button>
                   </li>

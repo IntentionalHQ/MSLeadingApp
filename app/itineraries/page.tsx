@@ -19,19 +19,20 @@ export default function ItinerariesPage() {
     load();
   };
 
+  const sundays = items.filter((i) => !i.is_template);
+  const templates = items.filter((i) => i.is_template);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1>Itineraries</h1>
-        <Link href="/itineraries/new" className="btn btn-primary">+ New</Link>
+        <h1>Sundays</h1>
+        <Link href="/itineraries/new" className="btn btn-primary">+ New Sunday</Link>
       </div>
       <ul className="space-y-2">
-        {items.map((it) => (
-          <li key={it.id} className="card p-3 flex items-center justify-between">
+        {sundays.map((it) => (
+          <li key={it.id} className="card p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
-              <div className="font-semibold">
-                {it.title} {it.is_template && <span className="text-xs ml-2 px-2 py-0.5 rounded bg-[#1f2a44]">Template</span>}
-              </div>
+              <div className="font-semibold">{it.title}</div>
               <div className="text-xs text-[#9fb0d3]">
                 {it.lesson_title ?? "—"} · {it.scheduled_date ?? new Date(it.created_at).toLocaleDateString()}
               </div>
@@ -44,6 +45,29 @@ export default function ItinerariesPage() {
           </li>
         ))}
       </ul>
+
+      {templates.length > 0 && (
+        <>
+          <h2 className="mt-6">Templates</h2>
+          <ul className="space-y-2">
+            {templates.map((it) => (
+              <li key={it.id} className="card p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                  <div className="font-semibold">{it.title}</div>
+                  <div className="text-xs text-[#9fb0d3]">
+                    {it.lesson_title ?? "—"} · {it.scheduled_date ?? new Date(it.created_at).toLocaleDateString()}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Link href={`/itineraries/${it.id}/edit`} className="btn btn-ghost">Edit</Link>
+                  <Link href="/itineraries/new" className="btn btn-primary">Use</Link>
+                  <button onClick={() => del(it.id)} className="btn btn-ghost">🗑</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 }

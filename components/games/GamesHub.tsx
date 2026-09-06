@@ -27,11 +27,11 @@ export default function GamesHub({
       <p className="text-sm text-[#9fb0d3]">{subtitle}</p>
 
       <div className="grid gap-2">
-        {GAMES.map((g) => (
+        {[...GAMES].sort((a, b) => Number(b.ready) - Number(a.ready)).map((g) => (
           <Link
             key={g.id}
             href={hrefFor(g.id)}
-            className="card p-4 hover:border-blue-500 transition-colors"
+            className={"card p-4 transition-colors " + (g.ready ? "hover:border-blue-500" : "opacity-50 pointer-events-none")}
           >
             <div className="flex items-start gap-3">
               <div className="text-3xl leading-none">{g.icon}</div>

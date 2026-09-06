@@ -21,15 +21,32 @@ export default function Home() {
     })();
   }, []);
 
+  const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD in local time, not UTC
+  const upcoming = items.filter((i) => i.scheduled_date && i.scheduled_date >= today)
+                        .sort((a, b) => a.scheduled_date!.localeCompare(b.scheduled_date!));
+  const hero = upcoming[0] ?? null;
+
   return (
     <div className="space-y-4">
       <div className="card p-4">
         <h1>Ready to lead?</h1>
         <p className="text-sm text-[#9fb0d3] mt-1">Start a Sunday, or jump straight into a game.</p>
-        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <Link href="/itineraries/new" className="btn btn-primary btn-lg w-full">➕ New Sunday</Link>
-          <Link href="/games" className="btn btn-ghost btn-lg w-full">🎮 Play a Game</Link>
-        </div>
+        {hero ? (
+          <>
+            <div className="mt-3 text-xs uppercase text-[#9fb0d3]">{hero.scheduled_date === today ? "Today" : "Next up"} · {hero.scheduled_date}</div>
+            <div className="text-xl font-bold">{hero.title}</div>
+            {hero.lesson_title && <div className="text-sm text-[#9fb0d3]">{hero.lesson_title}{hero.bible_passage ? ` · ${hero.bible_passage}` : ""}</div>}
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              <Link href={`/itineraries/${hero.id}/edit`} className="btn btn-ghost btn-lg">Edit</Link>
+              <Link href={`/itineraries/${hero.id}/lead`} className="btn btn-primary btn-lg col-span-2">▶ Lead</Link>
+            </div>
+          </>
+        ) : (
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <Link href="/itineraries/new" className="btn btn-primary btn-lg w-full">➕ Plan this Sunday</Link>
+            <Link href="/games" className="btn btn-ghost btn-lg w-full">🎮 Play a Game</Link>
+          </div>
+        )}
       </div>
 
       <div className="card p-4">
@@ -57,7 +74,7 @@ export default function Home() {
         <Link href="/itineraries" className="btn btn-ghost w-full mt-3">View all Sundays</Link>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-4 gap-3">
         <Link href="/games" className="card p-4 text-center">
           <div className="text-2xl">🎮</div>
           <div className="font-semibold mt-1 text-sm">Games</div>
@@ -69,6 +86,10 @@ export default function Home() {
         <Link href="/summaries" className="card p-4 text-center">
           <div className="text-2xl">📜</div>
           <div className="font-semibold mt-1 text-sm">History</div>
+        </Link>
+        <Link href="/admin" className="card p-4 text-center">
+          <div className="text-2xl">❓</div>
+          <div className="font-semibold mt-1 text-sm">Questions</div>
         </Link>
       </div>
     </div>

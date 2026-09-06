@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { Itinerary, Section, SectionType } from "@/lib/types";
-import { SECTION_LABEL } from "@/lib/types";
+import { SECTION_LABEL, SECTION_ICON } from "@/lib/types";
 import { GAMES } from "@/lib/games";
 
 export default function EditItineraryPage() {
@@ -89,9 +89,13 @@ export default function EditItineraryPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1>{it.title}</h1>
-        <div className="flex gap-2">
+        <div>
+          <h1>{it.title}</h1>
+          <div className="text-xs text-[#9fb0d3]">{sections.reduce((a, s) => a + (s.duration_minutes ?? 0), 0)} min planned</div>
+        </div>
+        <div className="flex flex-wrap gap-2 justify-end">
           <button onClick={saveTemplate} className="btn btn-ghost">Save as Template</button>
+          <Link href="/itineraries" className="btn btn-ghost">✓ Done</Link>
           <Link href={`/itineraries/${id}/lead`} className="btn btn-primary">Start Group ▶</Link>
         </div>
       </div>
@@ -111,30 +115,30 @@ export default function EditItineraryPage() {
           <div key={s.id} className="card p-3">
             <div className="flex items-center gap-2">
               <span className="text-[#9fb0d3] text-sm w-6">{i + 1}.</span>
+              <span className="text-xl w-7 text-center">{SECTION_ICON[s.section_type]}</span>
               <input value={s.title} onChange={(e) => patchSection(s.id, { title: e.target.value })} className="flex-1" />
-              <select value={s.section_type} onChange={(e) => patchSection(s.id, { section_type: e.target.value as SectionType })} className="w-40">
-                {Object.entries(SECTION_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-              </select>
+              <span className="text-xs text-[#9fb0d3] font-mono w-12 text-right">{s.duration_minutes ?? "–"} min</span>
             </div>
+            {s.section_type === "group_game" && (
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-sm text-[#9fb0d3] shrink-0">🎮 Game</span>
+                <select value={s.chosen_game ?? "pick_at_time"} onChange={(e) => patchSection(s.id, { chosen_game: e.target.value })}>
+                  <option value="pick_at_time">Let leader pick during group</option>
+                  {GAMES.map((g) => (
+                    <option key={g.id} value={g.id}>{g.icon} {g.label}{!g.ready ? " (coming soon)" : ""}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             {editing === s.id && (
               <div className="mt-3 space-y-2">
+                <div><label>Type</label><select value={s.section_type} onChange={(e) => patchSection(s.id, { section_type: e.target.value as SectionType })}>
+                  {Object.entries(SECTION_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                </select></div>
                 <div className="grid grid-cols-2 gap-2">
                   <div><label>Start time</label><input value={s.start_time ?? ""} onChange={(e) => patchSection(s.id, { start_time: e.target.value || null })} placeholder="10:30 AM" /></div>
                   <div><label>Duration (min)</label><input type="number" value={s.duration_minutes ?? ""} onChange={(e) => patchSection(s.id, { duration_minutes: e.target.value ? parseInt(e.target.value) : null })} /></div>
                 </div>
-                {s.section_type === "group_game" && (
-                  <div>
-                    <label>Chosen game</label>
-                    <select value={s.chosen_game ?? "pick_at_time"} onChange={(e) => patchSection(s.id, { chosen_game: e.target.value })}>
-                      <option value="pick_at_time">Let leader pick during group</option>
-                      {GAMES.map((g) => (
-                        <option key={g.id} value={g.id}>
-                          {g.icon} {g.label}{!g.ready ? " (coming soon)" : ""}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
                 <div><label>Instructions</label><textarea rows={2} value={s.instructions ?? ""} onChange={(e) => patchSection(s.id, { instructions: e.target.value || null })} /></div>
                 <div><label>Script (what to say)</label><textarea rows={2} value={s.script ?? ""} onChange={(e) => patchSection(s.id, { script: e.target.value || null })} /></div>
                 <div><label>Discussion questions</label><textarea rows={2} value={s.discussion_questions ?? ""} onChange={(e) => patchSection(s.id, { discussion_questions: e.target.value || null })} /></div>

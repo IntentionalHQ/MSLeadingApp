@@ -16,6 +16,11 @@ export const SECTION_LABEL: Record<SectionType, string> = {
   custom: "Custom Section",
 };
 
+export const SECTION_ICON: Record<SectionType, string> = {
+  free_hangout: "☕", rules: "📏", memory_verse: "📖", bible_reading: "📜", discussion: "💬",
+  prayer: "🙏", memory_verse_check: "✅", group_game: "🎮", score_recording: "📝", custom: "▫️",
+};
+
 export type Itinerary = {
   id: string;
   title: string;

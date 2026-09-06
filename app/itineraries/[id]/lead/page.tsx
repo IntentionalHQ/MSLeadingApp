@@ -23,6 +23,15 @@ export default function LeaderModePage() {
   useEffect(() => { load(); }, [id]);
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(t); }, []);
 
+  useEffect(() => {
+    let lock: any = null;
+    const grab = async () => { try { lock = await (navigator as any).wakeLock?.request("screen"); } catch {} };
+    grab();
+    const onVis = () => { if (document.visibilityState === "visible") grab(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => { lock?.release?.(); document.removeEventListener("visibilitychange", onVis); };
+  }, []);
+
   const currentIdx = sections.findIndex((s) => !s.completed);
   const current = currentIdx >= 0 ? sections[currentIdx] : null;
   const upcoming = currentIdx >= 0 ? sections.slice(currentIdx + 1) : [];
@@ -54,6 +63,13 @@ export default function LeaderModePage() {
   const sectionElapsed = Math.max(0, Math.floor((now.getTime() - sectionStart) / 1000));
   const groupElapsed = Math.max(0, Math.floor((now.getTime() - groupStart) / 1000));
 
+  const targetSecs = (current?.duration_minutes ?? 0) * 60;
+  const remaining = targetSecs - sectionElapsed;
+  const timerClass =
+    targetSecs === 0 ? "text-[#9fb0d3]" :
+    remaining < 0 ? "text-red-400" :
+    remaining <= 60 ? "text-amber-400" : "text-[#e6ecf5]";
+
   if (!it) return <p>Loading…</p>;
 
   const done = currentIdx === -1;
@@ -80,9 +96,14 @@ export default function LeaderModePage() {
       ) : current && (
         <div className="card p-4">
           <div className="text-xs uppercase text-[#9fb0d3]">{SECTION_LABEL[current.section_type]}</div>
-          <div className="text-2xl font-bold mt-1">{current.title}</div>
-          <div className="text-xs text-[#9fb0d3] mt-1">
-            Target: {current.duration_minutes ?? 0} min · Elapsed: <span className="font-mono">{fmt(sectionElapsed)}</span>
+          <div className="text-3xl font-bold mt-1">{current.title}</div>
+          <div className="mt-2 flex items-baseline gap-3">
+            <div className={`text-4xl font-mono font-bold tabular-nums ${timerClass}`}>
+              {targetSecs === 0 ? fmt(sectionElapsed) : `${remaining < 0 ? "-" : ""}${fmt(Math.abs(remaining))}`}
+            </div>
+            <div className="text-xs text-[#9fb0d3]">
+              {targetSecs === 0 ? "no target" : remaining < 0 ? "over" : "left"} · plan {current.duration_minutes ?? 0} min
+            </div>
           </div>
 
           {/* Section-type-specific inline content */}
@@ -137,10 +158,6 @@ export default function LeaderModePage() {
             {current.section_type === "score_recording" && (
               <Link href={`/itineraries/${id}/summary`} className="btn btn-ghost btn-lg">📝 Record Summary</Link>
             )}
-            <div className="grid grid-cols-3 gap-2">
-              <button onClick={previous} disabled={doneSecs === 0} className="btn btn-ghost btn-lg disabled:opacity-40">← Previous</button>
-              <button onClick={advance} className="btn btn-primary btn-lg col-span-2">Next Section →</button>
-            </div>
           </div>
         </div>
       )}
@@ -156,6 +173,15 @@ export default function LeaderModePage() {
               </li>
             ))}
           </ol>
+        </div>
+      )}
+
+      {!done && (
+        <div className="fixed bottom-0 inset-x-0 z-40 p-3 bg-[#0b1220]/95 backdrop-blur border-t border-[#1f2a44]">
+          <div className="max-w-3xl mx-auto grid grid-cols-3 gap-2">
+            <button onClick={previous} disabled={doneSecs === 0} className="btn btn-ghost btn-lg">← Prev</button>
+            <button onClick={advance} className="btn btn-primary btn-lg col-span-2">Next Section →</button>
+          </div>
         </div>
       )}
     </div>
