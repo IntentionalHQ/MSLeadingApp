@@ -2,7 +2,6 @@ import "./globals.css";
 import Link from "next/link";
 import ScoreBar from "@/components/ScoreBar";
 import OfflineBanner from "@/components/OfflineBanner";
-import TabBar from "@/components/TabBar";
 
 export const metadata = {
   title: "MS Leading",
@@ -30,17 +29,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ScoreBar />
           <header className="mb-4">
             <Link href="/" className="text-lg font-bold block mb-2">MS Leading</Link>
-            <nav className="hidden sm:flex gap-4 text-sm text-[#9fb0d3] overflow-x-auto whitespace-nowrap -mx-1 px-1 pb-1">
-              <Link href="/itineraries" className="shrink-0 py-1">Sundays</Link>
-              <Link href="/games" className="shrink-0 py-1">Games</Link>
-              <Link href="/teams" className="shrink-0 py-1">Teams</Link>
-              <Link href="/summaries" className="shrink-0 py-1">History</Link>
-              <Link href="/admin" className="shrink-0 py-1">Questions</Link>
+            <nav className="flex flex-wrap gap-2 text-sm font-semibold">
+              <Link href="/itineraries" className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-[#2a3654] bg-[#121a2b] text-[#e6ecf5] active:scale-95 transition-transform"><span className="text-base leading-none">📅</span>Sundays</Link>
+              <Link href="/games" className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-[#2a3654] bg-[#121a2b] text-[#e6ecf5] active:scale-95 transition-transform"><span className="text-base leading-none">🎮</span>Games</Link>
+              <Link href="/teams" className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-[#2a3654] bg-[#121a2b] text-[#e6ecf5] active:scale-95 transition-transform"><span className="text-base leading-none">🏆</span>Teams</Link>
+              <Link href="/summaries" className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-[#2a3654] bg-[#121a2b] text-[#e6ecf5] active:scale-95 transition-transform"><span className="text-base leading-none">📜</span>History</Link>
+              <Link href="/admin" className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-[#2a3654] bg-[#121a2b] text-[#e6ecf5] active:scale-95 transition-transform"><span className="text-base leading-none">❓</span>Questions</Link>
             </nav>
           </header>
           {children}
         </div>
-        <TabBar />
       </body>
     </html>
   );
