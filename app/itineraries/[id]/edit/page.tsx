@@ -14,6 +14,9 @@ import SectionPalette from "@/components/outline/SectionPalette";
 import TimelineFooter from "@/components/outline/TimelineFooter";
 import SaveIndicator from "@/components/outline/SaveIndicator";
 import { useSaveState } from "@/components/outline/useBlurSave";
+import PlanFileMenu from "@/components/outline/PlanFileMenu";
+import type { ParsedPlan, PastOutline } from "@/lib/planXlsx";
+import { todayLocal } from "@/lib/dates";
 
 export default function EditItineraryPage() {
   const { id } = useParams<{ id: string }>();
@@ -191,6 +194,45 @@ export default function EditItineraryPage() {
     router.push(`/itineraries/${newIt.id}/edit`);
   };
 
+  // The four most recent Sundays dated before this plan, with their sections,
+  // for the AI planning template.
+  const loadPast = async (): Promise<PastOutline[]> => {
+    const before = it?.scheduled_date ?? todayLocal();
+    const { data: its } = await supabase.from("itineraries").select("*")
+      .eq("is_template", false).neq("id", id).lt("scheduled_date", before)
+      .order("scheduled_date", { ascending: false }).limit(4);
+    const list = (its ?? []) as Itinerary[];
+    if (!list.length) return [];
+    const { data: secs } = await supabase.from("itinerary_sections").select("*")
+      .in("itinerary_id", list.map((x) => x.id)).order("position");
+    const all = (secs ?? []) as Section[];
+    return list.map((itinerary) => ({ itinerary, sections: all.filter((s) => s.itinerary_id === itinerary.id) }));
+  };
+
+  // Replace this Sunday's outline with an uploaded plan. Blank plan fields keep
+  // their current values; sections are fully replaced.
+  const applyImport = async (plan: ParsedPlan) => {
+    if (!it) return;
+    const patch: Partial<Itinerary> = {};
+    for (const [k, v] of Object.entries(plan.itinerary)) if (v !== null && v !== undefined && v !== "") (patch as any)[k] = v;
+    if (Object.keys(patch).length) {
+      const { error } = await supabase.from("itineraries").update(patch).eq("id", id);
+      if (error) throw error;
+    }
+    const { error: delErr } = await supabase.from("itinerary_sections").delete().eq("itinerary_id", id);
+    if (delErr) throw delErr;
+    const { data: inserted, error: insErr } = await supabase.from("itinerary_sections").insert(plan.sections.map((s, i) => ({
+      itinerary_id: id, position: i, title: s.title, section_type: s.section_type,
+      duration_minutes: s.duration_minutes, chosen_game: s.chosen_game,
+      instructions: s.instructions, script: s.script, discussion_questions: s.discussion_questions, notes: s.notes,
+      completed: false, completed_at: null,
+    }))).select();
+    if (insErr) throw insErr;
+    setIt((p) => (p ? { ...p, ...patch, led_at: p.led_at } : p));
+    setSections((inserted ?? []) as Section[]);
+    setExpanded(null);
+  };
+
   const resetProgress = async () => {
     setMenuOpen(false);
     setSections((p) => p.map((s) => ({ ...s, completed: false, completed_at: null })));
@@ -238,6 +280,7 @@ export default function EditItineraryPage() {
         right={
           <div className="flex items-center gap-2">
             <SaveIndicator state={state} />
+            <PlanFileMenu itinerary={it} sections={sections} loadPast={loadPast} onApply={applyImport} />
             <Link href={`/itineraries/${id}/lead`} className="btn btn-primary">▶ Lead</Link>
             <div className="relative" ref={menuRef}>
               <button type="button" className="btn btn-ghost" aria-label="More actions" onClick={() => setMenuOpen((o) => !o)}>⋯</button>
