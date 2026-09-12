@@ -4,5 +4,5 @@ import AuctionGame from "@/components/games/AuctionGame";
 
 export default function BibleAuctionPage() {
   const { id } = useParams<{ id: string }>();
-  return <AuctionGame itineraryId={id} backHref={`/itineraries/${id}/games`} />;
+  return <AuctionGame itineraryId={id} backHref={`/itineraries/${id}/lead`} backLabel="← Leader" />;
 }

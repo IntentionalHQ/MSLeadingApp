@@ -1,9 +1,9 @@
 "use client";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { Itinerary, Team, Student } from "@/lib/types";
+import PageHeader from "@/components/PageHeader";
 
 export default function VerseCheckPage() {
   const { id } = useParams<{ id: string }>();
@@ -80,10 +80,7 @@ export default function VerseCheckPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1>Memory Verse Check</h1>
-        <Link href={`/itineraries/${id}/lead`} className="btn btn-ghost">← Leader</Link>
-      </div>
+      <PageHeader title="Memory Verse Check" backHref={`/itineraries/${id}/lead`} backLabel="Leader" />
 
       {it.memory_verse && (
         <div className="card p-4 border-yellow-600">

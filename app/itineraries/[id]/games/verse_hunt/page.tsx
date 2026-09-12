@@ -4,5 +4,5 @@ import VerseHuntGame from "@/components/games/VerseHuntGame";
 
 export default function VerseHuntPage() {
   const { id } = useParams<{ id: string }>();
-  return <VerseHuntGame itineraryId={id} backHref={`/itineraries/${id}/games`} />;
+  return <VerseHuntGame itineraryId={id} backHref={`/itineraries/${id}/lead`} backLabel="← Leader" />;
 }

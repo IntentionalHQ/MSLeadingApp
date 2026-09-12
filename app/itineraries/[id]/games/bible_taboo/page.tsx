@@ -4,5 +4,5 @@ import TabooGame from "@/components/games/TabooGame";
 
 export default function BibleTabooPage() {
   const { id } = useParams<{ id: string }>();
-  return <TabooGame itineraryId={id} backHref={`/itineraries/${id}/games`} />;
+  return <TabooGame itineraryId={id} backHref={`/itineraries/${id}/lead`} backLabel="← Leader" />;
 }

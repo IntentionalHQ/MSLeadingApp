@@ -12,7 +12,7 @@ export default function GameStubPage() {
       <div className="card p-6 space-y-3">
         <h1>Unknown game</h1>
         <p className="text-sm text-[#9fb0d3]">No game type matches "{game}".</p>
-        <Link href={`/itineraries/${id}/games`} className="btn btn-primary">← Back to games</Link>
+        <Link href={`/itineraries/${id}/lead`} className="btn btn-primary">← Leader</Link>
       </div>
     );
   }
@@ -23,7 +23,7 @@ export default function GameStubPage() {
         <h1>
           <span className="mr-2">{def.icon}</span>{def.label}
         </h1>
-        <Link href={`/itineraries/${id}/games`} className="btn btn-ghost">← All games</Link>
+        <Link href={`/itineraries/${id}/lead`} className="btn btn-ghost">← Leader</Link>
       </div>
 
       <div className="card p-4 space-y-3">
