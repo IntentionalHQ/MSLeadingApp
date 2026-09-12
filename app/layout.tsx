@@ -27,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="max-w-3xl mx-auto p-4 pb-24">
           <OfflineBanner />
           <ScoreBar />
-          <header className="mb-4">
+          <header className="sticky top-0 z-30 -mx-4 px-4 pt-3 pb-3 mb-4 bg-[#0b1220]/95 backdrop-blur border-b border-[#1f2a44]">
             <Link href="/" className="text-lg font-bold block mb-2">MS Leading</Link>
             <nav className="flex flex-wrap gap-2 text-sm font-semibold">
               <Link href="/itineraries" className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-[#2a3654] bg-[#121a2b] text-[#e6ecf5] active:scale-95 transition-transform"><span className="text-base leading-none">📅</span>Sundays</Link>
