@@ -1,6 +1,6 @@
-// Excel planning template: download a workbook an AI can read and fill in,
-// then upload it back to replace the Sunday's outline. The uploaded file is
-// parsed in the browser and never stored anywhere.
+// Excel plan template: download a workbook a person or an assistant can fill
+// in, then upload it back to replace the Sunday's outline. The uploaded file
+// is parsed in the browser and never stored anywhere.
 
 import type { Itinerary, Section, SectionType } from "./types";
 import { SECTION_LABEL } from "./types";
@@ -17,9 +17,9 @@ export type ParsedPlan = {
 
 // ---------------------------------------------------------------------------
 // Sheet names and column headers. The parser looks these up by name, so the
-// AI is told (loudly) not to rename them.
+// instructions say not to rename them.
 // ---------------------------------------------------------------------------
-export const SHEET_README = "READ ME FIRST (AI instructions)";
+export const SHEET_README = "READ ME FIRST";
 export const SHEET_PLAN = "Plan";
 export const SHEET_SECTIONS = "Sections";
 export const SHEET_REFERENCE = "Reference";
@@ -40,57 +40,55 @@ const SECTION_HEADERS = [
 ] as const;
 
 // ---------------------------------------------------------------------------
-// The prompt. This is what the AI reads first. Keep it plain text, one idea per
-// row, because spreadsheet cells don't render markdown.
+// The instructions sheet. Plain text, one idea per row, because spreadsheet
+// cells don't render markdown.
 // ---------------------------------------------------------------------------
 function readmeRows(planDate: string): string[][] {
   const L: string[] = [
-    "MS LEADING — SUNDAY MORNING PLANNING TEMPLATE",
+    "MS LEADING — SUNDAY MORNING PLAN TEMPLATE",
     "",
-    "YOU ARE THE PLANNING ASSISTANT. The person who uploaded this file leads a middle-school small group on Sunday mornings. Your job is to interview them briefly, then write this Sunday's outline into the 'Plan' and 'Sections' sheets of THIS workbook and give the file back, so they can upload it into their app.",
+    "This workbook is one Sunday morning plan for a middle-school small group. Fill it in, then upload it back into MS Leading (Edit a Sunday, then Excel Template, then Upload completed template) and the app builds the full outline from it.",
     "",
-    "STEP 1 — READ THE WHOLE WORKBOOK BEFORE YOU SAY ANYTHING.",
-    "  • 'Past 4 Sundays' = the last four outlines this leader actually used, newest first. This is the ground truth for structure, tone, wording, and where they are in their Bible series.",
-    "  • 'Reference' = the allowed section types, the games the app can run, and what each cell should contain.",
-    "  • 'Plan' and 'Sections' = the two sheets you fill in. Anything already in them is the current draft; keep it unless the leader says otherwise.",
+    "You can fill it in yourself in Excel or Google Sheets, or hand the whole file to an assistant (a co-leader or an AI chat) and ask them to plan the week with you. The instructions below are written so either can follow them.",
     "",
-    "STEP 2 — OPEN WITH A SHORT SUMMARY, THEN ASK. Your first message should:",
-    "  1. Say in one or two sentences where the group left off (passage covered last time, the series they are in, the memory verse they used).",
-    "  2. Propose the natural next passage (usually the next section of the same book) and a theme sentence.",
-    "  3. Ask ONLY these questions, numbered, and wait for answers:",
-    "     Q1. Passage for this Sunday? (Accept my proposal or give another.)",
-    "     Q2. Main point you want the students to walk away with?",
-    "     Q3. Memory verse? (Suggest one from the passage. Say 'none' to skip the Memory Verse section.)",
-    "     Q4. Which game, and how long? (Pick from the Reference sheet, or 'let me pick on the day'.)",
-    "     Q5. Anything different this week? (Guests, schedule changes, announcements, follow-ups from last week.)",
-    "  Do not ask anything else unless an answer is unclear. Keep the interview to one round if you can.",
+    "WHAT IS IN THIS WORKBOOK",
+    "  • Plan = the header for the Sunday: title, date, start time, lesson, passage, memory verse. Fill column B.",
+    "  • Sections = the outline, one row per section in the order they happen. This is the main sheet.",
+    "  • Reference = the section types and games the app understands, and what each column is for.",
+    "  • Past 4 Sundays = the last four outlines that were actually used, newest first. Use them to see the usual structure, the exact wording of the recurring sections, and where the group is in its Bible series.",
     "",
-    "STEP 3 — DRAFT THE OUTLINE IN CHAT FIRST. Show the section list with minutes, then the Bible Reading discussion questions. Ask 'Anything to change before I write it into the file?' Make edits until they say it is good.",
+    "HOW TO FILL IT IN",
+    "  1. Look at Past 4 Sundays. Note the last passage covered and the series it belongs to. The next Sunday usually continues from there.",
+    "  2. Decide the passage, the main point for the students, the memory verse (or none), and the game.",
+    "  3. Copy the recurring sections (Free Hangout, Rules and Reset, Memory Verse, Prayer) from the most recent past Sunday. Their wording stays the same week to week unless you want to change it.",
+    "  4. Write the Bible Reading section: the passage text in Script, the Say / Mean / Do questions in Discussion questions.",
+    "  5. Check the minutes add up to the slot length on the Plan sheet.",
+    "  6. Delete any example rows, save as .xlsx, and upload.",
     "",
-    "STEP 4 — FILL THE WORKBOOK AND RETURN IT AS .xlsx.",
-    "  • 'Plan' sheet: fill column B next to each label in column A. Do not rename column A.",
-    "  • 'Sections' sheet: one row per section, top to bottom in the order they happen. Keep the header row exactly as is. Delete the example rows.",
-    "  • Return the file with the same sheet names. Do not add sheets, columns, merged cells, or formatting tricks. Plain text in cells; line breaks inside a cell are fine.",
+    "IF AN ASSISTANT IS HELPING YOU PLAN (person or AI), they should:",
+    "  • Read the whole workbook before saying anything.",
+    "  • Open with one or two sentences on where the group left off and propose the natural next passage and a theme.",
+    "  • Ask only these, then wait: 1) Passage? 2) Main point for the students? 3) Memory verse, or none? 4) Which game and how long? 5) Anything different this week (guests, schedule, announcements, follow-ups)?",
+    "  • Draft the outline in conversation first and get a yes before writing it into the file.",
+    "  • Return this same workbook as .xlsx with the same sheet names. No added sheets, columns, merged cells, or formatting. Plain text in cells; line breaks inside a cell are fine.",
     "",
-    "HOW THIS LEADER WRITES (match this closely — copy wording from Past 4 Sundays where a section repeats every week):",
-    "  • Recurring sections keep IDENTICAL text week to week: Free Hangout, Rules and Reset, Prayer, and the Memory Verse instructions. Copy them from the most recent past Sunday verbatim unless the leader asks for a change.",
-    "  • 'Instructions' = short imperative sentences to the leader. What to do, in what order. No fluff. Example: 'Ask students to name the three questions used for every Bible passage. Have students take turns reading.'",
-    "  • 'Script' = the exact words to say, in quotation marks. For the Bible Reading section, the Script also contains the FULL passage text pasted in (NLT is what they have been using), with the passage heading in capitals first, e.g. 'MARK 3:20-30', then the verses with verse numbers.",
-    "  • 'Discussion questions' for Bible Reading use the SAY / MEAN / DO framework this group uses every week:",
-    "       Say = What does the passage literally say?   Mean = What does it mean?   Do = What are you going to do about it?",
-    "    Format: a heading in capitals with the passage range, then for each subsection of the passage a 'Say:', 'Mean:', and 'Do:' question, each followed by the expected answer in [square brackets]. Two or three subsections is plenty; the leader will not get through more than that in 20 minutes.",
-    "  • 'Notes' = leader-only reminders. Where things are, what to avoid, scoring rules. Example: 'The goal is understanding and application, not finishing every verse.'",
-    "  • Tone: direct, warm, no jargon. Written for a volunteer reading a phone while teenagers talk. Short paragraphs. No markdown symbols (no #, *, or -). Numbered lists are fine.",
-    "  • Timing: the whole group runs about 45 to 60 minutes. Typical shape: Free Hangout 15, Rules and Reset 2, Memory Verse 5, Bible Reading 20, Prayer 3, Group Game 5 to 15. Adjust to what the leader asks for, but keep the total inside the slot length on the Plan sheet.",
-    "  • Teams and points: students are split into two teams that earn points all season (memory verse recites earn 1 point each; games have their own scoring). Mention team names only if they appear in Past 4 Sundays.",
+    "HOW THE PLANS ARE WRITTEN (match this, and copy wording from Past 4 Sundays where a section repeats):",
+    "  • Instructions = short imperative sentences to the leader. What to do, in what order. Example: 'Ask students to name the three questions used for every Bible passage. Have students take turns reading.'",
+    "  • Script = the exact words to say, in quotation marks. For Bible Reading, the Script also holds the FULL passage text (NLT so far), with the reference in capitals first, e.g. 'MARK 3:20-30', then the verses with verse numbers.",
+    "  • Discussion questions for Bible Reading use SAY / MEAN / DO: Say = what does the passage say, Mean = what does it mean, Do = what are you going to do about it. Put a heading in capitals with the passage range, then for each part of the passage a Say, Mean, and Do question, each followed by the expected answer in [square brackets]. Two or three parts is plenty for 20 minutes.",
+    "  • Notes = leader-only reminders: where things are, what to avoid, scoring rules.",
+    "  • Tone: direct and warm, no jargon, written for a volunteer reading a phone while teenagers talk. Short paragraphs. No markdown symbols. Numbered lists are fine.",
+    "  • Timing: about 45 to 60 minutes total. Typical: Free Hangout 15, Rules and Reset 2, Memory Verse 5, Bible Reading 20, Prayer 3, Group Game 5 to 15.",
+    "  • Teams and points: students are on two teams that earn points all season. Memory verse recites earn 1 point each; games have their own scoring.",
     "",
-    "VALUES THE APP ACCEPTS (see Reference sheet for the full lists):",
+    "VALUES THE APP ACCEPTS (full lists on the Reference sheet):",
     "  • Type must be one of: " + Object.values(SECTION_LABEL).join(", ") + ".",
-    "  • Game is only used when Type is 'Group Game'. Use the exact game name from the Reference sheet, or 'Pick during group'.",
-    "  • Minutes must be a whole number. Order must be 1, 2, 3, ...",
+    "  • Game is only used when Type is 'Group Game'. Use the game name from the Reference sheet, or 'Pick during group'.",
+    "  • Minutes is a whole number. Order is 1, 2, 3, ...",
     "  • Date is YYYY-MM-DD. Start time looks like 11:00 AM.",
+    "  • Do not rename the sheets, the column A labels on Plan, or the header row on Sections. The upload looks for them by name.",
     "",
-    `This template was generated on ${planDate}. The 'Past 4 Sundays' sheet holds the four outlines dated before the plan's date.`,
+    `Generated on ${planDate}. Past 4 Sundays holds the four outlines dated before this plan's date.`,
   ];
   return L.map((s) => [s]);
 }
@@ -230,7 +228,7 @@ function typeFromCell(v: unknown): SectionType | null {
   for (const [id, label] of Object.entries(SECTION_LABEL)) {
     if (norm(label).replace(/[^a-z ]/g, "") === n || id === n.replace(/ /g, "_")) return id as SectionType;
   }
-  // Friendly aliases the AI might reach for.
+  // Friendly aliases people reach for.
   const alias: Record<string, SectionType> = {
     hangout: "free_hangout", "free hang out": "free_hangout", arrival: "free_hangout",
     "rules and reset": "rules", "rules reset": "rules", rules: "rules",

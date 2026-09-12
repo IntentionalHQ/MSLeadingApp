@@ -4,9 +4,10 @@ import type { Itinerary, Section } from "@/lib/types";
 import { SECTION_ICON } from "@/lib/types";
 import { buildTemplate, parseTemplate, type ParsedPlan, type PastOutline } from "@/lib/planXlsx";
 
-// "AI Plan" button next to Lead. Download = an Excel template with the AI
-// prompt, the current draft, and the last four Sundays. Upload = parse a
-// filled-in template in the browser and replace this Sunday's outline.
+// "Excel Template" button next to Lead. Download = a workbook with the current
+// draft, the last four Sundays, and instructions anyone (a person or an AI
+// assistant) can follow to fill it in. Upload = parse a filled-in template in
+// the browser and replace this Sunday's outline.
 // The uploaded file is never sent or stored anywhere.
 export default function PlanFileMenu({
   itinerary, sections, loadPast, onApply,
@@ -95,21 +96,21 @@ export default function PlanFileMenu({
     <>
       <div className="relative" ref={menuRef}>
         <button type="button" className="btn btn-ghost" onClick={() => setOpen((o) => !o)} disabled={busy !== null} aria-haspopup="true" aria-expanded={open}>
-          {busy === "download" ? "Building…" : busy === "parse" ? "Reading…" : "🤖 AI Plan"}
+          {busy === "download" ? "Building…" : busy === "parse" ? "Reading…" : "📊 Excel Template"}
         </button>
         {open && (
           <div className="absolute right-0 mt-1 w-72 card p-1 z-50">
             <button type="button" className="btn btn-ghost w-full justify-start text-left" onClick={download}>
               <span className="mr-2" aria-hidden>⬇️</span>
               <span>
-                <span className="block">Download planning template</span>
-                <span className="block text-xs text-[#9fb0d3] font-normal">Excel file with instructions for an AI and your last 4 Sundays</span>
+                <span className="block">Download template</span>
+                <span className="block text-xs text-[#9fb0d3] font-normal">This Sunday as a spreadsheet, plus your last 4 Sundays for reference</span>
               </span>
             </button>
             <button type="button" className="btn btn-ghost w-full justify-start text-left" onClick={pickFile}>
               <span className="mr-2" aria-hidden>⬆️</span>
               <span>
-                <span className="block">Upload filled template</span>
+                <span className="block">Upload completed template</span>
                 <span className="block text-xs text-[#9fb0d3] font-normal">Replaces this Sunday's outline. File is not saved anywhere.</span>
               </span>
             </button>
