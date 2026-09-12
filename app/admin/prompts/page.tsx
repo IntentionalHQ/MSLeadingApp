@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import PageHeader from "@/components/PageHeader";
+import Confirm from "@/components/Confirm";
 import type { GamePrompt } from "@/lib/types";
 
 const CATEGORIES: GamePrompt["category"][] = ["person", "place", "object", "story", "theme", "other"];
@@ -65,20 +67,19 @@ export default function PromptsAdminPage() {
     load();
   };
   const del = async (p: GamePrompt) => {
-    if (!confirm(`Delete "${p.text}"?`)) return;
     await supabase.from("game_prompts").delete().eq("id", p.id);
     load();
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1>Prompt Bank</h1>
-          <div className="text-sm text-[#9fb0d3]">Shared by Bible Pictionary, Hangman, and (later) Taboo.</div>
-        </div>
-        <button onClick={startNew} className="btn btn-primary">+ New Prompt</button>
-      </div>
+      <PageHeader
+        title="Word & Drawing Prompts"
+        subtitle="Shared by Bible Pictionary, Hangman, and (later) Taboo."
+        backHref="/admin"
+        backLabel="Question banks"
+        right={<button onClick={startNew} className="btn btn-primary">+ New Prompt</button>}
+      />
 
       <div className="card p-3 space-y-2">
         <div className="flex gap-2 flex-wrap items-center">
@@ -145,7 +146,7 @@ export default function PromptsAdminPage() {
               </div>
               <button onClick={() => toggleActive(p)} className="btn btn-ghost">{p.active ? "Disable" : "Enable"}</button>
               <button onClick={() => startEdit(p)} className="btn btn-ghost">Edit</button>
-              <button onClick={() => del(p)} className="btn btn-ghost">🗑</button>
+              <Confirm label="🗑" title="Delete prompt" onConfirm={() => del(p)} className="btn btn-ghost" />
             </div>
           </div>
         ))}

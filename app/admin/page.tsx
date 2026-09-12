@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import PageHeader from "@/components/PageHeader";
 
 type BankStat = { count: number; loading: boolean };
 
@@ -58,12 +59,7 @@ export default function AdminHubPage() {
 
   return (
     <div className="space-y-3">
-      <div>
-        <h1>Question Banks</h1>
-        <p className="text-sm text-[#9fb0d3]">
-          Add, edit, or disable questions for any game. Changes save directly to Supabase.
-        </p>
-      </div>
+      <PageHeader title="Question Banks" subtitle="Add, edit, or disable questions for any game. Changes save directly to Supabase." />
 
       <div className="grid gap-2">
         {BANKS.map((b) => {

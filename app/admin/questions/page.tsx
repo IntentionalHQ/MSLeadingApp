@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import PageHeader from "@/components/PageHeader";
+import Confirm from "@/components/Confirm";
 import type { Question } from "@/lib/types";
 
 const DIFFS: Question["difficulty"][] = ["single", "double", "triple", "home_run"];
@@ -43,17 +45,18 @@ export default function QuestionsAdminPage() {
   };
 
   const del = async (q: Question) => {
-    if (!confirm("Delete this question?")) return;
     await supabase.from("questions").delete().eq("id", q.id);
     load();
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1>Question Bank</h1>
-        <button onClick={() => setCreating(true)} className="btn btn-primary">+ New</button>
-      </div>
+      <PageHeader
+        title="Baseball Questions"
+        backHref="/admin"
+        backLabel="Question banks"
+        right={<button onClick={() => setCreating(true)} className="btn btn-primary">+ New</button>}
+      />
 
       <div className="card p-3 space-y-2">
         <div className="flex gap-2 flex-wrap">
@@ -79,7 +82,7 @@ export default function QuestionsAdminPage() {
               <div className="flex flex-col gap-1">
                 <button onClick={() => setEditing(q)} className="btn btn-ghost">Edit</button>
                 <button onClick={() => toggleActive(q)} className="btn btn-ghost">{q.active ? "Hide" : "Show"}</button>
-                <button onClick={() => del(q)} className="btn btn-ghost">🗑</button>
+                <Confirm label="🗑" title="Delete question" onConfirm={() => del(q)} className="btn btn-ghost" />
               </div>
             </div>
           </li>
