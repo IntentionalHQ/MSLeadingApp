@@ -148,7 +148,7 @@ export default function LeaderModePage() {
         <div className="card p-6 space-y-3">
           <div className="text-lg">You're partway through this Sunday ({doneSecs} of {totalSecs} done).</div>
           <div className="flex flex-wrap gap-2">
-            <button onClick={() => setGateDismissed(true)} className="btn btn-primary btn-lg">Resume</button>
+            <button onClick={() => { if (!it.led_at) setLedNow(); setGateDismissed(true); }} className="btn btn-primary btn-lg">Resume</button>
             <button onClick={restart} className="btn btn-ghost btn-lg">Start from the top</button>
           </div>
         </div>

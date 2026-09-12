@@ -38,14 +38,14 @@ export default function ScoreBar() {
   if (!ok || teams.length === 0) return null;
 
   return (
-    <div className="mt-2 flex items-center justify-center gap-2 flex-wrap">
+    <div className="mt-2 flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap">
       {teams.map((t, i) => (
         <div key={t.id} className="flex items-center gap-1">
-          {i > 0 && <div className="text-[#3b4a70] text-lg px-1">vs</div>}
-          <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#121a2b] border border-[#1f2a44]">
-            <span className="text-xl">{t.icon ?? "🏳️"}</span>
-            <span className="font-semibold text-sm">{t.name}</span>
-            <span className="text-xl font-mono font-bold text-blue-300 tabular-nums mx-1">{t.total_score}</span>
+          {i > 0 && <div className="hidden sm:block text-[#3b4a70] text-lg px-1">vs</div>}
+          <div className="flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-1 rounded-lg bg-[#121a2b] border border-[#1f2a44]">
+            <span className="text-lg sm:text-xl">{t.icon ?? "🏳️"}</span>
+            <span className="font-semibold text-xs sm:text-sm max-w-[64px] sm:max-w-none truncate">{t.name}</span>
+            <span className="text-lg sm:text-xl font-mono font-bold text-blue-300 tabular-nums mx-0.5 sm:mx-1">{t.total_score}</span>
             <button onClick={() => bump(t, -1)} className="px-2 min-h-[36px] rounded bg-[#1f2a44] hover:bg-[#28345a] text-sm leading-none" aria-label={`${t.name} minus 1`}>−</button>
             <button onClick={() => bump(t, +1)} className="px-2 min-h-[36px] rounded bg-blue-600 hover:bg-blue-500 text-sm leading-none" aria-label={`${t.name} plus 1`}>+</button>
           </div>
