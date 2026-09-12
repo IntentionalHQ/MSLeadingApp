@@ -54,7 +54,8 @@ export default function EditItineraryPage() {
     if (!dragging) return;
     const onMove = (e: PointerEvent) => {
       const rects = rectsRef.current;
-      let over = rects.length - 1;
+      // overIndex is an insertion slot: 0..n, where n means "after the last row".
+      let over = rects.length;
       for (let i = 0; i < rects.length; i++) {
         const mid = rects[i].top + rects[i].height / 2;
         if (e.clientY < mid) { over = i; break; }
@@ -64,7 +65,11 @@ export default function EditItineraryPage() {
     const onUp = () => {
       if (dragging) {
         const from = sections.findIndex((s) => s.id === dragging.id);
-        if (from !== -1 && from !== dragging.overIndex) reorder(from, dragging.overIndex);
+        if (from !== -1) {
+          // Removing the dragged row shifts every later slot up by one.
+          const to = dragging.overIndex > from ? dragging.overIndex - 1 : dragging.overIndex;
+          if (to !== from) reorder(from, to);
+        }
       }
       setDragging(null);
     };
@@ -292,6 +297,7 @@ export default function EditItineraryPage() {
             />
           </div>
         ))}
+        {dragging && dragging.overIndex === sections.length && <div className="h-0.5 bg-blue-500 rounded" />}
         {sections.length === 0 && <div className="card p-4 text-sm text-[#9fb0d3]">No sections yet — add one below.</div>}
       </div>
 

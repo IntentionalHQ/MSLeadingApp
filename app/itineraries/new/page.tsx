@@ -35,6 +35,7 @@ function NewSundayInner() {
   const [sourceId, setSourceId] = useState("");
   const [preview, setPreview] = useState<Section[]>([]);
   const [busy, setBusy] = useState(false);
+  const [createErr, setCreateErr] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -77,13 +78,14 @@ function NewSundayInner() {
     const st = startTime.trim();
     if (st && parseClock(st) === null) { setStartErr(true); return; }
     setStartErr(false);
+    setCreateErr(null);
     setBusy(true);
     const { data: newIt, error } = await supabase.from("itineraries").insert({
       title, lesson_title: lesson || null, bible_passage: passage || null,
       memory_verse: verse || null, scheduled_date: date, is_template: false,
       start_time: st || null, slot_minutes: slot ? parseInt(slot, 10) : null,
     }).select().single();
-    if (error || !newIt) { setBusy(false); return; }
+    if (error || !newIt) { setCreateErr(error?.message ?? "Could not create this Sunday. Try again."); setBusy(false); return; }
 
     if (sourceId) {
       const { data: srcSections } = await supabase.from("itinerary_sections")
@@ -156,6 +158,7 @@ function NewSundayInner() {
           </div>
         )}
 
+        {createErr && <div className="text-sm text-red-400">{createErr}</div>}
         <button disabled={busy} className="btn btn-primary" onClick={create}>{busy ? "Creating…" : "Create & edit outline"}</button>
       </div>
     </div>
