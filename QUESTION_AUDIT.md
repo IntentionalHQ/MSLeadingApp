@@ -1,6 +1,6 @@
 # Question Bank Audit — all game modes, for 5th–8th graders
 
-Audited every seed file and every game's loading code (September 2026). Nothing is deleted. The SQL to add what is missing is in [supabase/v12_question_balance.sql](supabase/v12_question_balance.sql). Paste it into the Supabase SQL editor and run it once; it is safe to re-run.
+Audited every seed file and every game's loading code (September 2026). Nothing is deleted. The SQL to add what is missing is split into one small file per game in `supabase/v12_1_*.sql` through `v12_6_*.sql`. Paste each into the Supabase SQL editor and run; every file is safe to re-run.
 
 ## The short version
 
@@ -130,9 +130,18 @@ A few hard rows overlap easier questions in other banks ("Methuselah lived 969 y
 
 ## Running it
 
-1. Open the Supabase SQL editor, paste `supabase/v12_question_balance.sql`, run.
-2. Read the optional block at the top first. It is commented out. Uncomment only the parts you agree with (the home-run retag is the one I would take).
-3. Re-running the file is safe: every insert skips rows whose text, topic, or statement already exists.
+One file per game, in any order:
+
+| File | What it does |
+|------|--------------|
+| `supabase/v12_1_prompts.sql` | Hangman / Pictionary / Taboo: banned words for the 20 existing prompts, plus 193 new prompts |
+| `supabase/v12_2_baseball.sql` | Bible Baseball / Four Corners / Auction: 32 real home runs, 30 real doubles |
+| `supabase/v12_3_price_is_right.sql` | Price Is Right: 40 "Everyday Bible Numbers" |
+| `supabase/v12_4_guess_the_fake.sql` | Guess the Fake: 20 easy, 12 hard |
+| `supabase/v12_5_true_false.sql` | True or False: 30 hard |
+| `supabase/v12_6_optional_retier.sql` | Optional: retag the 43 mis-tiered home runs, deactivate the broken rows |
+
+For each: open the file in your editor, select all, copy; in the Supabase SQL editor select all, paste, and Run. Every file is plain ASCII, uses no line comments, and is safe to re-run: inserts skip rows that already exist, updates only touch the rows they name.
 
 ## Follow-ups that need the app, not SQL
 

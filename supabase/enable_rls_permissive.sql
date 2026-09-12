@@ -34,7 +34,12 @@ declare
     -- Tables added after schema.sql (PIR / games / contests features):
     'contests',
     'game_prompts',
-    'pir_questions'
+    'pir_questions',
+    -- Game banks added later (v8, v10, v11). Without these the anon key sees
+    -- zero rows and the games silently fall back to their built-in lists.
+    'gtf_questions',
+    'tf_questions',
+    'verse_hunt_prompts'
   ];
 begin
   foreach t in array tables loop
