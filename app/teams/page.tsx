@@ -6,6 +6,7 @@ import type { Team, Student, Contest } from "@/lib/types";
 import { MASCOTS, pickMascots, type Mascot } from "@/lib/mascots";
 import PageHeader from "@/components/PageHeader";
 import Confirm from "@/components/Confirm";
+import DateInput from "@/components/DateInput";
 
 // Human "time left" label for the active season, e.g. "3 weeks left" / "Ended".
 function seasonTimeLeft(endDate: string | null): string | null {
@@ -300,10 +301,10 @@ function NewSeasonModal({ teams, onClose, onCreated }: { teams: Team[]; onClose:
         <h2>New Season</h2>
         <div><label>Name</label><input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Fall 2026" /></div>
         <div className="grid grid-cols-2 gap-2">
-          <div><label>Start</label><input type="date" value={start} onChange={(e) => setStart(e.target.value)} /></div>
+          <div><label>Start</label><DateInput value={start} onChange={setStart} /></div>
           <div><label>Length (months)</label><input type="number" min={1} max={12} value={months} onChange={(e) => setMonths(parseInt(e.target.value) || 1)} /></div>
         </div>
-        <div><label>Ends (auto)</label><input type="date" value={end} onChange={(e) => setEnd(e.target.value)} /></div>
+        <div><label>Ends (auto)</label><DateInput value={end} onChange={setEnd} /></div>
 
         <div>
           <div className="flex items-center justify-between">

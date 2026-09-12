@@ -7,6 +7,7 @@ import { SECTION_ICON } from "@/lib/types";
 import { todayLocal, parseClock } from "@/lib/dates";
 import { totalMinutes } from "@/lib/schedule";
 import PageHeader from "@/components/PageHeader";
+import DateInput from "@/components/DateInput";
 
 function niceDate(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
@@ -112,7 +113,7 @@ function NewSundayInner() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label>Date</label>
-            <input type="date" value={date} onChange={(e) => onDateChange(e.target.value)} />
+            <DateInput value={date} onChange={onDateChange} />
           </div>
           <div>
             <label>Start time</label>

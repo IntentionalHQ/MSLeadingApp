@@ -9,6 +9,7 @@ import { buildTimeline, timelineSummary } from "@/lib/schedule";
 import { parseClock, formatClock } from "@/lib/dates";
 import PageHeader from "@/components/PageHeader";
 import Confirm from "@/components/Confirm";
+import DateInput from "@/components/DateInput";
 import SectionRow from "@/components/outline/SectionRow";
 import SectionPalette from "@/components/outline/SectionPalette";
 import TimelineFooter from "@/components/outline/TimelineFooter";
@@ -333,7 +334,7 @@ export default function EditItineraryPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label>Date</label>
-            <input type="date" defaultValue={it.scheduled_date ?? ""} onBlur={(e) => { if ((e.target.value || null) !== it.scheduled_date) patchItinerary({ scheduled_date: e.target.value || null }); }} />
+            <DateInput value={it.scheduled_date ?? ""} onChange={(v) => { if ((v || null) !== it.scheduled_date) patchItinerary({ scheduled_date: v || null }); }} />
           </div>
           <div>
             <label>Start time</label>

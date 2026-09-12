@@ -9,6 +9,7 @@ import { gameLabel, gameRoutePath } from "@/lib/games";
 import { buildTimeline } from "@/lib/schedule";
 import { formatClock } from "@/lib/dates";
 import PageHeader from "@/components/PageHeader";
+import AutoTextarea from "@/components/AutoTextarea";
 import SaveIndicator from "@/components/outline/SaveIndicator";
 import { useSaveState } from "@/components/outline/useBlurSave";
 
@@ -197,7 +198,7 @@ export default function LeaderModePage() {
             </div>
             {editingField === "script" ? (
               <div className="mt-1 space-y-2">
-                <textarea rows={3} defaultValue={current.script ?? ""} onBlur={(e) => patchCurrent({ script: e.target.value || null })} />
+                <AutoTextarea rows={4} defaultValue={current.script ?? ""} onBlur={(e) => patchCurrent({ script: e.target.value || null })} />
                 <button className="btn btn-ghost" onClick={() => setEditingField(null)}>Done</button>
               </div>
             ) : (
@@ -215,7 +216,7 @@ export default function LeaderModePage() {
             </div>
             {editingField === "discussion_questions" ? (
               <div className="mt-1 space-y-2">
-                <textarea rows={3} defaultValue={current.discussion_questions ?? ""} onBlur={(e) => patchCurrent({ discussion_questions: e.target.value || null })} />
+                <AutoTextarea rows={4} defaultValue={current.discussion_questions ?? ""} onBlur={(e) => patchCurrent({ discussion_questions: e.target.value || null })} />
                 <button className="btn btn-ghost" onClick={() => setEditingField(null)}>Done</button>
               </div>
             ) : (
@@ -226,7 +227,7 @@ export default function LeaderModePage() {
           {/* Notes: save on blur */}
           <div className="mt-3">
             <div className="text-xs text-[#9fb0d3]">Notes (optional — visible here while leading)</div>
-            <textarea
+            <AutoTextarea
               rows={2}
               defaultValue={current.notes ?? ""}
               placeholder="Anything to remember for this section this week…"

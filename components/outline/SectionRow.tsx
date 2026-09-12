@@ -6,6 +6,7 @@ import type { TimelineRow } from "@/lib/schedule";
 import { formatClock } from "@/lib/dates";
 import { GAMES, GAMES_BY_ID, gameLabel } from "@/lib/games";
 import Confirm from "@/components/Confirm";
+import AutoTextarea from "@/components/AutoTextarea";
 
 const FIELD_LABEL: Record<"instructions" | "script" | "discussion_questions" | "notes", string> = {
   instructions: "Instructions",
@@ -123,7 +124,7 @@ export default function SectionRow({
           {type === "memory_verse" && (
             <div>
               <label>This week's memory verse</label>
-              <textarea
+              <AutoTextarea
                 rows={3}
                 defaultValue={memoryVerse ?? ""}
                 placeholder={'e.g. "Trust in the LORD with all your heart…" — Proverbs 3:5'}
@@ -177,8 +178,8 @@ export default function SectionRow({
           {SECTION_FIELDS[type].map((field) => (
             <div key={field}>
               <label>{FIELD_LABEL[field]}</label>
-              <textarea
-                rows={2}
+              <AutoTextarea
+                rows={field === "notes" ? 2 : 4}
                 defaultValue={(section[field] as string | null) ?? ""}
                 onBlur={(e) => {
                   const v = e.target.value || null;
