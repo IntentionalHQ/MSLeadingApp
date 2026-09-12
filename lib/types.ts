@@ -30,6 +30,9 @@ export type Itinerary = {
   scheduled_date: string | null;
   is_template: boolean;
   created_at: string;
+  start_time: string | null;
+  slot_minutes: number | null;
+  led_at: string | null;
 };
 
 export type Section = {
@@ -45,7 +48,42 @@ export type Section = {
   discussion_questions: string | null;
   notes: string | null;
   completed: boolean;
+  completed_at: string | null;
   chosen_game: string | null;
+};
+
+/** Defaults used when a section is inserted from the palette. */
+export const SECTION_DEFAULTS: Record<SectionType, { title: string; duration: number }> = {
+  free_hangout: { title: "Free Hangout", duration: 8 },
+  rules: { title: "Rules / Reset", duration: 4 },
+  memory_verse: { title: "Memory Verse", duration: 5 },
+  memory_verse_check: { title: "Memory Verse Check", duration: 8 },
+  bible_reading: { title: "Bible Reading", duration: 10 },
+  discussion: { title: "Discussion", duration: 15 },
+  prayer: { title: "Prayer", duration: 5 },
+  group_game: { title: "Group Game", duration: 20 },
+  score_recording: { title: "Score Recording", duration: 3 },
+  custom: { title: "New Section", duration: 5 },
+};
+
+/** Order the palette chips are shown in (the natural flow of a Sunday). */
+export const SECTION_PALETTE_ORDER: SectionType[] = [
+  "free_hangout", "rules", "memory_verse", "memory_verse_check", "bible_reading",
+  "discussion", "prayer", "group_game", "score_recording", "custom",
+];
+
+/** Which detail fields each type shows in the editor. */
+export const SECTION_FIELDS: Record<SectionType, Array<"instructions" | "script" | "discussion_questions" | "notes">> = {
+  free_hangout: ["notes"],
+  rules: ["script", "notes"],
+  memory_verse: ["script", "notes"],
+  memory_verse_check: ["instructions", "notes"],
+  bible_reading: ["instructions", "notes"],
+  discussion: ["discussion_questions", "notes"],
+  prayer: ["script", "notes"],
+  group_game: ["instructions", "notes"],
+  score_recording: ["notes"],
+  custom: ["instructions", "script", "discussion_questions", "notes"],
 };
 
 export type Contest = {
