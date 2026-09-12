@@ -7,7 +7,7 @@ export type SaveState = "idle" | "saving" | "saved" | "error";
 export function useSaveState() {
   const [state, setState] = useState<SaveState>("idle");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const track = useCallback(async <T,>(p: Promise<{ error: unknown } | T>) => {
+  const track = useCallback(async <T,>(p: PromiseLike<{ error: unknown } | T>) => {
     setState("saving");
     try {
       const r: any = await p;

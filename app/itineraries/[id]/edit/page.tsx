@@ -1,17 +1,35 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { Itinerary, Section, SectionType } from "@/lib/types";
-import { SECTION_LABEL, SECTION_ICON } from "@/lib/types";
-import { GAMES } from "@/lib/games";
+import { SECTION_DEFAULTS } from "@/lib/types";
+import { buildTimeline, timelineSummary } from "@/lib/schedule";
+import { parseClock } from "@/lib/dates";
+import PageHeader from "@/components/PageHeader";
+import Confirm from "@/components/Confirm";
+import SectionRow from "@/components/outline/SectionRow";
+import SectionPalette from "@/components/outline/SectionPalette";
+import TimelineFooter from "@/components/outline/TimelineFooter";
+import SaveIndicator from "@/components/outline/SaveIndicator";
+import { useSaveState } from "@/components/outline/useBlurSave";
 
 export default function EditItineraryPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
+  const { state, track } = useSaveState();
   const [it, setIt] = useState<Itinerary | null>(null);
   const [sections, setSections] = useState<Section[]>([]);
-  const [editing, setEditing] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [templateName, setTemplateName] = useState<string | null>(null); // non-null = prompt open
+  const [startErr, setStartErr] = useState(false);
+  const [dragging, setDragging] = useState<{ id: string; overIndex: number } | null>(null);
+
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const rectsRef = useRef<DOMRect[]>([]);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
   const load = async () => {
     const { data: it } = await supabase.from("itineraries").select("*").eq("id", id).single();
@@ -21,141 +39,265 @@ export default function EditItineraryPage() {
   };
   useEffect(() => { load(); }, [id]);
 
-  const updateItinerary = async (patch: Partial<Itinerary>) => {
-    await supabase.from("itineraries").update(patch).eq("id", id);
-    setIt((prev) => (prev ? { ...prev, ...patch } : prev));
+  // Close overflow menu on outside click / Escape.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: MouseEvent) => { if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setMenuOpen(false); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+  }, [menuOpen]);
+
+  // Drag: track pointer moves on the document while dragging a handle.
+  useEffect(() => {
+    if (!dragging) return;
+    const onMove = (e: PointerEvent) => {
+      const rects = rectsRef.current;
+      let over = rects.length - 1;
+      for (let i = 0; i < rects.length; i++) {
+        const mid = rects[i].top + rects[i].height / 2;
+        if (e.clientY < mid) { over = i; break; }
+      }
+      setDragging((d) => (d && d.overIndex !== over ? { ...d, overIndex: over } : d));
+    };
+    const onUp = () => {
+      if (dragging) {
+        const from = sections.findIndex((s) => s.id === dragging.id);
+        if (from !== -1 && from !== dragging.overIndex) reorder(from, dragging.overIndex);
+      }
+      setDragging(null);
+    };
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener("pointerup", onUp);
+    return () => { document.removeEventListener("pointermove", onMove); document.removeEventListener("pointerup", onUp); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dragging, sections]);
+
+  const patchItinerary = (patch: Partial<Itinerary>) => {
+    setIt((p) => (p ? { ...p, ...patch } : p));
+    return track(supabase.from("itineraries").update(patch).eq("id", id));
+  };
+  const patchSection = (sid: string, patch: Partial<Section>) => {
+    setSections((p) => p.map((s) => (s.id === sid ? { ...s, ...patch } : s)));
+    return track(supabase.from("itinerary_sections").update(patch).eq("id", sid));
   };
 
-  const addSection = async () => {
-    const pos = sections.length;
+  const addSection = async (type: SectionType) => {
+    const def = SECTION_DEFAULTS[type];
     const { data } = await supabase.from("itinerary_sections").insert({
-      itinerary_id: id, position: pos, title: "New Section", section_type: "custom", duration_minutes: 5,
+      itinerary_id: id, position: sections.length, title: def.title, section_type: type,
+      duration_minutes: def.duration,
+      chosen_game: type === "group_game" ? "pick_at_time" : null,
     }).select().single();
-    if (data) setSections([...sections, data as any]);
+    if (data) {
+      const row = data as Section;
+      setSections((p) => [...p, row]);
+      setExpanded(row.id);
+      setTimeout(() => document.getElementById(`section-${row.id}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 60);
+    }
   };
 
-  const saveTemplate = async () => {
-    if (!it) return;
-    // Duplicate current itinerary as a template
-    const { data: newIt } = await supabase.from("itineraries").insert({
-      title: it.title + " (Template)", is_template: true,
-    }).select().single();
-    if (!newIt) return;
-    await supabase.from("itinerary_sections").insert(sections.map((s) => ({
-      itinerary_id: newIt.id, position: s.position, title: s.title, section_type: s.section_type,
-      start_time: s.start_time, duration_minutes: s.duration_minutes,
-      instructions: s.instructions, script: s.script,
-      discussion_questions: s.discussion_questions, notes: s.notes,
-    })));
-    alert("Saved as template");
-  };
-
-  const move = async (idx: number, dir: -1 | 1) => {
-    const j = idx + dir;
-    if (j < 0 || j >= sections.length) return;
-    const a = sections[idx], b = sections[j];
+  const reorder = (from: number, to: number) => {
+    if (from === to || from < 0 || to < 0 || from >= sections.length || to >= sections.length) return;
     const next = [...sections];
-    next[idx] = { ...b, position: idx };
-    next[j] = { ...a, position: j };
-    setSections(next);
-    await supabase.from("itinerary_sections").update({ position: idx }).eq("id", b.id);
-    await supabase.from("itinerary_sections").update({ position: j }).eq("id", a.id);
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    const renumbered = next.map((s, i) => ({ ...s, position: i }));
+    const changed = renumbered.filter((s) => sections.find((p) => p.id === s.id)?.position !== s.position);
+    setSections(renumbered);
+    if (changed.length) {
+      track(Promise.all(changed.map((s) => supabase.from("itinerary_sections").update({ position: s.position }).eq("id", s.id))) as any);
+    }
   };
 
-  const dup = async (s: Section) => {
-    const pos = sections.length;
+  const duplicate = async (s: Section) => {
     const { data } = await supabase.from("itinerary_sections").insert({
-      itinerary_id: id, position: pos, title: s.title + " (copy)", section_type: s.section_type,
-      start_time: s.start_time, duration_minutes: s.duration_minutes,
-      instructions: s.instructions, script: s.script,
-      discussion_questions: s.discussion_questions, notes: s.notes,
+      itinerary_id: id, position: sections.length, title: `${s.title} (copy)`, section_type: s.section_type,
+      duration_minutes: s.duration_minutes, instructions: s.instructions, script: s.script,
+      discussion_questions: s.discussion_questions, notes: s.notes, chosen_game: s.chosen_game,
+      completed: false, completed_at: null,
     }).select().single();
-    if (data) setSections([...sections, data as any]);
+    if (data) setSections((p) => [...p, data as Section]);
   };
 
-  const del = async (sid: string) => {
-    if (!confirm("Delete this section?")) return;
+  const remove = async (sid: string) => {
     await supabase.from("itinerary_sections").delete().eq("id", sid);
-    setSections(sections.filter((s) => s.id !== sid));
+    const remaining = sections.filter((s) => s.id !== sid).map((s, i) => ({ ...s, position: i }));
+    const changed = remaining.filter((s) => sections.find((p) => p.id === s.id)?.position !== s.position);
+    setSections(remaining);
+    if (expanded === sid) setExpanded(null);
+    if (changed.length) {
+      track(Promise.all(changed.map((s) => supabase.from("itinerary_sections").update({ position: s.position }).eq("id", s.id))) as any);
+    }
   };
 
-  const patchSection = async (sid: string, patch: Partial<Section>) => {
-    setSections((prev) => prev.map((s) => (s.id === sid ? { ...s, ...patch } : s)));
-    await supabase.from("itinerary_sections").update(patch).eq("id", sid);
+  const saveTemplate = async (name: string) => {
+    if (!it) return;
+    await track((async () => {
+      const { data: newIt, error } = await supabase.from("itineraries").insert({
+        title: name, is_template: true, start_time: it.start_time, slot_minutes: it.slot_minutes,
+        lesson_title: it.lesson_title, bible_passage: it.bible_passage, memory_verse: it.memory_verse,
+      }).select().single();
+      if (error || !newIt) return { error: error ?? "failed" };
+      if (sections.length) {
+        const { error: e2 } = await supabase.from("itinerary_sections").insert(sections.map((s) => ({
+          itinerary_id: newIt.id, position: s.position, title: s.title, section_type: s.section_type,
+          duration_minutes: s.duration_minutes, instructions: s.instructions, script: s.script,
+          discussion_questions: s.discussion_questions, notes: s.notes, chosen_game: s.chosen_game,
+          completed: false, completed_at: null,
+        })));
+        if (e2) return { error: e2 };
+      }
+      return {};
+    })());
+    setTemplateName(null);
+    setMenuOpen(false);
   };
 
-  if (!it) return <p>Loading…</p>;
+  const resetProgress = async () => {
+    setMenuOpen(false);
+    setSections((p) => p.map((s) => ({ ...s, completed: false, completed_at: null })));
+    setIt((p) => (p ? { ...p, led_at: null } : p));
+    await track((async () => {
+      await supabase.from("itinerary_sections").update({ completed: false, completed_at: null }).eq("itinerary_id", id);
+      const { error } = await supabase.from("itineraries").update({ led_at: null }).eq("id", id);
+      return { error };
+    })());
+  };
+
+  const deleteSunday = async () => {
+    await supabase.from("itinerary_sections").delete().eq("itinerary_id", id);
+    await supabase.from("itineraries").delete().eq("id", id);
+    router.push("/itineraries");
+  };
+
+  const onStartTimeBlur = (value: string) => {
+    const v = value.trim();
+    if (v && parseClock(v) === null) { setStartErr(true); return; }
+    setStartErr(false);
+    if ((v || null) !== (it?.start_time ?? null)) patchItinerary({ start_time: v || null });
+  };
+
+  const startDrag = (sectionId: string) => (e: React.PointerEvent) => {
+    e.preventDefault();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    rectsRef.current = listRef.current ? Array.from(listRef.current.children).map((el) => el.getBoundingClientRect()) : [];
+    const idx = sections.findIndex((s) => s.id === sectionId);
+    setDragging({ id: sectionId, overIndex: idx });
+  };
+
+  if (!it) return <div className="card p-4">Loading…</div>;
+
+  const timeline = buildTimeline(it.start_time, sections);
+  const anyCompleted = sections.some((s) => s.completed);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1>{it.title}</h1>
-          <div className="text-xs text-[#9fb0d3]">{sections.reduce((a, s) => a + (s.duration_minutes ?? 0), 0)} min planned</div>
-        </div>
-        <div className="flex flex-wrap gap-2 justify-end">
-          <button onClick={saveTemplate} className="btn btn-ghost">Save as Template</button>
-          <Link href="/itineraries" className="btn btn-ghost">✓ Done</Link>
-          <Link href={`/itineraries/${id}/lead`} className="btn btn-primary">Start Group ▶</Link>
-        </div>
-      </div>
-
-      <div className="card p-4 space-y-3">
-        <div><label>Title</label><input defaultValue={it.title} onBlur={(e) => updateItinerary({ title: e.target.value })} /></div>
-        <div className="grid grid-cols-2 gap-3">
-          <div><label>Date</label><input type="date" defaultValue={it.scheduled_date ?? ""} onBlur={(e) => updateItinerary({ scheduled_date: e.target.value || null })} /></div>
-          <div><label>Lesson title</label><input defaultValue={it.lesson_title ?? ""} onBlur={(e) => updateItinerary({ lesson_title: e.target.value || null })} /></div>
-        </div>
-        <div><label>Bible passage</label><input defaultValue={it.bible_passage ?? ""} onBlur={(e) => updateItinerary({ bible_passage: e.target.value || null })} /></div>
-        <div><label>Memory verse</label><textarea rows={2} defaultValue={it.memory_verse ?? ""} onBlur={(e) => updateItinerary({ memory_verse: e.target.value || null })} /></div>
-      </div>
-
-      <div className="space-y-2">
-        {sections.map((s, i) => (
-          <div key={s.id} className="card p-3">
-            <div className="flex items-center gap-2">
-              <span className="text-[#9fb0d3] text-sm w-6">{i + 1}.</span>
-              <span className="text-xl w-7 text-center">{SECTION_ICON[s.section_type]}</span>
-              <input value={s.title} onChange={(e) => patchSection(s.id, { title: e.target.value })} className="flex-1" />
-              <span className="text-xs text-[#9fb0d3] font-mono w-12 text-right">{s.duration_minutes ?? "–"} min</span>
-            </div>
-            {s.section_type === "group_game" && (
-              <div className="mt-2 flex items-center gap-2">
-                <span className="text-sm text-[#9fb0d3] shrink-0">🎮 Game</span>
-                <select value={s.chosen_game ?? "pick_at_time"} onChange={(e) => patchSection(s.id, { chosen_game: e.target.value })}>
-                  <option value="pick_at_time">Let leader pick during group</option>
-                  {GAMES.map((g) => (
-                    <option key={g.id} value={g.id}>{g.icon} {g.label}{!g.ready ? " (coming soon)" : ""}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-            {editing === s.id && (
-              <div className="mt-3 space-y-2">
-                <div><label>Type</label><select value={s.section_type} onChange={(e) => patchSection(s.id, { section_type: e.target.value as SectionType })}>
-                  {Object.entries(SECTION_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                </select></div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div><label>Start time</label><input value={s.start_time ?? ""} onChange={(e) => patchSection(s.id, { start_time: e.target.value || null })} placeholder="10:30 AM" /></div>
-                  <div><label>Duration (min)</label><input type="number" value={s.duration_minutes ?? ""} onChange={(e) => patchSection(s.id, { duration_minutes: e.target.value ? parseInt(e.target.value) : null })} /></div>
+    <div className="space-y-4 pb-20">
+      <PageHeader
+        title={it.title}
+        subtitle={timelineSummary(it.start_time, sections)}
+        backHref="/itineraries"
+        backLabel="Sundays"
+        right={
+          <div className="flex items-center gap-2">
+            <SaveIndicator state={state} />
+            <Link href={`/itineraries/${id}/lead`} className="btn btn-primary">▶ Lead</Link>
+            <div className="relative" ref={menuRef}>
+              <button type="button" className="btn btn-ghost" aria-label="More actions" onClick={() => setMenuOpen((o) => !o)}>⋯</button>
+              {menuOpen && (
+                <div className="absolute right-0 mt-1 w-56 card p-1 z-50">
+                  <button type="button" className="btn btn-ghost w-full justify-start" onClick={() => { setTemplateName(`${it.title} Template`); setMenuOpen(false); }}>Save as template…</button>
+                  {anyCompleted && (
+                    <button type="button" className="btn btn-ghost w-full justify-start" onClick={resetProgress}>Reset progress</button>
+                  )}
+                  <Confirm label="Delete Sunday" confirmLabel="Delete Sunday" className="btn btn-ghost w-full justify-start text-red-400" onConfirm={deleteSunday} />
                 </div>
-                <div><label>Instructions</label><textarea rows={2} value={s.instructions ?? ""} onChange={(e) => patchSection(s.id, { instructions: e.target.value || null })} /></div>
-                <div><label>Script (what to say)</label><textarea rows={2} value={s.script ?? ""} onChange={(e) => patchSection(s.id, { script: e.target.value || null })} /></div>
-                <div><label>Discussion questions</label><textarea rows={2} value={s.discussion_questions ?? ""} onChange={(e) => patchSection(s.id, { discussion_questions: e.target.value || null })} /></div>
-                <div><label>Notes</label><textarea rows={2} value={s.notes ?? ""} onChange={(e) => patchSection(s.id, { notes: e.target.value || null })} /></div>
-              </div>
-            )}
-            <div className="flex gap-2 mt-2">
-              <button onClick={() => setEditing(editing === s.id ? null : s.id)} className="btn btn-ghost">{editing === s.id ? "Close" : "Details"}</button>
-              <button onClick={() => move(i, -1)} className="btn btn-ghost">↑</button>
-              <button onClick={() => move(i, 1)} className="btn btn-ghost">↓</button>
-              <button onClick={() => dup(s)} className="btn btn-ghost">Duplicate</button>
-              <button onClick={() => del(s.id)} className="btn btn-ghost">🗑</button>
+              )}
             </div>
           </div>
-        ))}
-        <button onClick={addSection} className="btn btn-ghost w-full">+ Add Section</button>
+        }
+      />
+
+      {templateName !== null && (
+        <div className="card p-4 space-y-2">
+          <label>Template name</label>
+          <input value={templateName} onChange={(e) => setTemplateName(e.target.value)} autoFocus />
+          <div className="flex gap-2">
+            <button type="button" className="btn btn-primary" onClick={() => saveTemplate(templateName.trim() || `${it.title} Template`)}>Save</button>
+            <button type="button" className="btn btn-ghost" onClick={() => setTemplateName(null)}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {/* Details */}
+      <div className="card p-4 space-y-3">
+        <div>
+          <label>Title</label>
+          <input defaultValue={it.title} onBlur={(e) => { if (e.target.value !== it.title) patchItinerary({ title: e.target.value }); }} />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label>Date</label>
+            <input type="date" defaultValue={it.scheduled_date ?? ""} onBlur={(e) => { if ((e.target.value || null) !== it.scheduled_date) patchItinerary({ scheduled_date: e.target.value || null }); }} />
+          </div>
+          <div>
+            <label>Start time</label>
+            <input defaultValue={it.start_time ?? ""} placeholder="10:30 AM" onBlur={(e) => onStartTimeBlur(e.target.value)} />
+            {startErr && <div className="text-xs text-red-400 mt-1">Use a time like 10:30 AM</div>}
+          </div>
+          <div>
+            <label>Slot length (min)</label>
+            <input type="number" inputMode="numeric" min={0} defaultValue={it.slot_minutes ?? ""} placeholder="60"
+              onBlur={(e) => { const v = e.target.value ? parseInt(e.target.value, 10) : null; if (v !== it.slot_minutes) patchItinerary({ slot_minutes: v }); }} />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label>Lesson title</label>
+            <input defaultValue={it.lesson_title ?? ""} onBlur={(e) => { if ((e.target.value || null) !== it.lesson_title) patchItinerary({ lesson_title: e.target.value || null }); }} />
+          </div>
+          <div>
+            <label>Bible passage</label>
+            <input id="bible_passage" defaultValue={it.bible_passage ?? ""} onBlur={(e) => { if ((e.target.value || null) !== it.bible_passage) patchItinerary({ bible_passage: e.target.value || null }); }} />
+          </div>
+        </div>
+        <div>
+          <label>Memory verse</label>
+          <textarea id="memory_verse" rows={2} defaultValue={it.memory_verse ?? ""} onBlur={(e) => { if ((e.target.value || null) !== it.memory_verse) patchItinerary({ memory_verse: e.target.value || null }); }} />
+        </div>
       </div>
+
+      {/* Sections */}
+      <div ref={listRef} className="space-y-2">
+        {sections.map((s, i) => (
+          <div key={s.id}>
+            {dragging && dragging.overIndex === i && <div className="h-0.5 bg-blue-500 rounded mb-2" />}
+            <SectionRow
+              section={s}
+              index={i}
+              row={timeline[i]}
+              expanded={expanded === s.id}
+              dragging={dragging?.id === s.id}
+              memoryVerse={it.memory_verse}
+              biblePassage={it.bible_passage}
+              onToggle={() => setExpanded((cur) => (cur === s.id ? null : s.id))}
+              onPatch={(patch) => patchSection(s.id, patch)}
+              onMove={(dir) => reorder(i, i + dir)}
+              onDuplicate={() => duplicate(s)}
+              onDelete={() => remove(s.id)}
+              isFirst={i === 0}
+              isLast={i === sections.length - 1}
+              dragHandleProps={{ onPointerDown: startDrag(s.id) }}
+            />
+          </div>
+        ))}
+        {sections.length === 0 && <div className="card p-4 text-sm text-[#9fb0d3]">No sections yet — add one below.</div>}
+      </div>
+
+      <SectionPalette onAdd={addSection} />
+
+      <TimelineFooter startTime={it.start_time} slotMinutes={it.slot_minutes} sections={sections} />
     </div>
   );
 }
