@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { todayLocal } from "@/lib/dates";
+import { todayLocal, parseClock, formatClock } from "@/lib/dates";
 import type { Itinerary } from "@/lib/types";
 
 function heroLabel(date: string, today: string): { text: string; cls: string } {
@@ -15,7 +15,7 @@ function heroLabel(date: string, today: string): { text: string; cls: string } {
 }
 
 export default function Home() {
-  const [hero, setHero] = useState<Itinerary | null>(null);
+  const [heroes, setHeroes] = useState<Itinerary[]>([]); // every service on the next upcoming date
   const [recent, setRecent] = useState<Itinerary[]>([]);
   const [loading, setLoading] = useState(true);
   const today = todayLocal();
@@ -29,7 +29,7 @@ export default function Home() {
           .gte("scheduled_date", today)
           .eq("is_template", false)
           .order("scheduled_date")
-          .limit(1),
+          .limit(12),
         supabase
           .from("itineraries")
           .select("*")
@@ -37,12 +37,16 @@ export default function Home() {
           .order("scheduled_date", { ascending: false, nullsFirst: false })
           .limit(6),
       ]);
-      setHero(up?.[0] ?? null);
+      const first = up?.[0]?.scheduled_date;
+      const sameDay = ((up ?? []) as Itinerary[]).filter((i) => i.scheduled_date === first);
+      sameDay.sort((a, b) => (parseClock(a.start_time) ?? 9999) - (parseClock(b.start_time) ?? 9999));
+      setHeroes(sameDay);
       setRecent(rec ?? []);
       setLoading(false);
     })();
   }, [today]);
 
+  const hero = heroes[0] ?? null;
   const label = hero?.scheduled_date ? heroLabel(hero.scheduled_date, today) : null;
 
   return (
@@ -56,15 +60,27 @@ export default function Home() {
               {label && <span className={label.cls}>{label.text}</span>}
               {hero.scheduled_date ? <span className="text-[#9fb0d3]"> · {hero.scheduled_date}</span> : null}
             </div>
-            <div className="text-xl font-bold">{hero.title}</div>
-            {hero.lesson_title && (
-              <div className="text-sm text-[#9fb0d3]">
-                {hero.lesson_title}{hero.bible_passage ? ` · ${hero.bible_passage}` : ""}
-              </div>
+            {heroes.length > 1 && (
+              <div className="text-xs text-[#9fb0d3] mt-0.5">{heroes.length} services</div>
             )}
-            <div className="mt-3 grid grid-cols-3 gap-2">
-              <Link href={`/itineraries/${hero.id}/edit`} className="btn btn-ghost btn-lg">Edit</Link>
-              <Link href={`/itineraries/${hero.id}/lead`} className="btn btn-primary btn-lg col-span-2">▶ Lead</Link>
+            <div className={heroes.length > 1 ? "mt-2 space-y-2" : ""}>
+              {heroes.map((h) => (
+                <div key={h.id} className={heroes.length > 1 ? "p-3 rounded-lg bg-[#0b1220] border border-[#1f2a44]" : ""}>
+                  <div className="text-xl font-bold">
+                    {parseClock(h.start_time) !== null && <span className="text-blue-300 font-mono tabular-nums mr-2">{formatClock(parseClock(h.start_time)!)}</span>}
+                    {h.title}
+                  </div>
+                  {h.lesson_title && (
+                    <div className="text-sm text-[#9fb0d3]">
+                      {h.lesson_title}{h.bible_passage ? ` · ${h.bible_passage}` : ""}
+                    </div>
+                  )}
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    <Link href={`/itineraries/${h.id}/edit`} className="btn btn-ghost btn-lg">Edit</Link>
+                    <Link href={`/itineraries/${h.id}/lead`} className="btn btn-primary btn-lg col-span-2">▶ Lead</Link>
+                  </div>
+                </div>
+              ))}
             </div>
           </>
         ) : (

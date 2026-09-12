@@ -26,7 +26,6 @@ function NewSundayInner() {
   const [titleTouched, setTitleTouched] = useState(false);
   const [lesson, setLesson] = useState("");
   const [passage, setPassage] = useState("");
-  const [verse, setVerse] = useState("");
   const [startTime, setStartTime] = useState("");
   const [startTouched, setStartTouched] = useState(false);
   const [startErr, setStartErr] = useState(false);
@@ -82,7 +81,7 @@ function NewSundayInner() {
     setBusy(true);
     const { data: newIt, error } = await supabase.from("itineraries").insert({
       title, lesson_title: lesson || null, bible_passage: passage || null,
-      memory_verse: verse || null, scheduled_date: date, is_template: false,
+      memory_verse: null, scheduled_date: date, is_template: false,
       start_time: st || null, slot_minutes: slot ? parseInt(slot, 10) : null,
     }).select().single();
     if (error || !newIt) { setCreateErr(error?.message ?? "Could not create this Sunday. Try again."); setBusy(false); return; }
@@ -129,7 +128,6 @@ function NewSundayInner() {
           <div><label>Lesson title</label><input value={lesson} onChange={(e) => setLesson(e.target.value)} placeholder="e.g. The Prodigal Son" /></div>
           <div><label>Bible passage</label><input value={passage} onChange={(e) => setPassage(e.target.value)} placeholder="e.g. Luke 15:11–32" /></div>
         </div>
-        <div><label>Memory verse</label><textarea rows={2} value={verse} onChange={(e) => setVerse(e.target.value)} /></div>
         <div>
           <label>Start from…</label>
           <select value={sourceId} onChange={(e) => setSourceId(e.target.value)}>

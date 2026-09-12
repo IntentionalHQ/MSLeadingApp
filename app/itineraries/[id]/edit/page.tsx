@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 import type { Itinerary, Section, SectionType } from "@/lib/types";
 import { SECTION_DEFAULTS } from "@/lib/types";
 import { buildTimeline, timelineSummary } from "@/lib/schedule";
-import { parseClock } from "@/lib/dates";
+import { parseClock, formatClock } from "@/lib/dates";
 import PageHeader from "@/components/PageHeader";
 import Confirm from "@/components/Confirm";
 import SectionRow from "@/components/outline/SectionRow";
@@ -24,6 +24,9 @@ export default function EditItineraryPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [templateName, setTemplateName] = useState<string | null>(null); // non-null = prompt open
+  const [dupTime, setDupTime] = useState<string | null>(null); // non-null = "duplicate for another service" prompt open
+  const [dupErr, setDupErr] = useState<string | null>(null);
+  const [dupBusy, setDupBusy] = useState(false);
   const [startErr, setStartErr] = useState(false);
   const [dragging, setDragging] = useState<{ id: string; overIndex: number } | null>(null);
 
@@ -160,6 +163,34 @@ export default function EditItineraryPage() {
     setMenuOpen(false);
   };
 
+  // Copy this plan (lesson, passage, verse, sections) as a second service on the
+  // same date with a different start time. Progress flags start fresh.
+  const duplicateService = async () => {
+    if (!it || dupBusy) return;
+    const st = (dupTime ?? "").trim();
+    if (!st || parseClock(st) === null) { setDupErr("Use a time like 11:00 AM"); return; }
+    setDupErr(null);
+    setDupBusy(true);
+    // Strip a trailing " · 9:00 AM" so duplicating a duplicate doesn't stack times.
+    const baseTitle = it.title.replace(/\s*·\s*\d{1,2}(:\d{2})?\s*[AaPp][Mm]?$/, "");
+    const { data: newIt, error } = await supabase.from("itineraries").insert({
+      title: `${baseTitle} · ${formatClock(parseClock(st)!)}`, is_template: false,
+      scheduled_date: it.scheduled_date, start_time: st, slot_minutes: it.slot_minutes,
+      lesson_title: it.lesson_title, bible_passage: it.bible_passage, memory_verse: it.memory_verse,
+    }).select().single();
+    if (error || !newIt) { setDupErr(error?.message ?? "Could not duplicate."); setDupBusy(false); return; }
+    if (sections.length) {
+      const { error: e2 } = await supabase.from("itinerary_sections").insert(sections.map((s) => ({
+        itinerary_id: newIt.id, position: s.position, title: s.title, section_type: s.section_type,
+        duration_minutes: s.duration_minutes, instructions: s.instructions, script: s.script,
+        discussion_questions: s.discussion_questions, notes: s.notes, chosen_game: s.chosen_game,
+        completed: false, completed_at: null,
+      })));
+      if (e2) { setDupErr(e2.message); setDupBusy(false); return; }
+    }
+    router.push(`/itineraries/${newIt.id}/edit`);
+  };
+
   const resetProgress = async () => {
     setMenuOpen(false);
     setSections((p) => p.map((s) => ({ ...s, completed: false, completed_at: null })));
@@ -212,6 +243,7 @@ export default function EditItineraryPage() {
               <button type="button" className="btn btn-ghost" aria-label="More actions" onClick={() => setMenuOpen((o) => !o)}>⋯</button>
               {menuOpen && (
                 <div className="absolute right-0 mt-1 w-56 card p-1 z-50">
+                  <button type="button" className="btn btn-ghost w-full justify-start" onClick={() => { setDupTime(""); setDupErr(null); setMenuOpen(false); }}>Duplicate for another service…</button>
                   <button type="button" className="btn btn-ghost w-full justify-start" onClick={() => { setTemplateName(`${it.title} Template`); setMenuOpen(false); }}>Save as template…</button>
                   {anyCompleted && (
                     <button type="button" className="btn btn-ghost w-full justify-start" onClick={resetProgress}>Reset progress</button>
@@ -223,6 +255,20 @@ export default function EditItineraryPage() {
           </div>
         }
       />
+
+      {dupTime !== null && (
+        <div className="card p-4 space-y-2">
+          <div className="font-semibold">Duplicate for another service</div>
+          <p className="text-sm text-[#9fb0d3]">Copies every section, the lesson, passage, and verse onto a second plan for {it.scheduled_date ?? "the same date"}. Progress starts fresh.</p>
+          <label>Start time of the other service</label>
+          <input value={dupTime} placeholder="11:00 AM" autoFocus onChange={(e) => { setDupTime(e.target.value); setDupErr(null); }} onKeyDown={(e) => { if (e.key === "Enter") duplicateService(); }} />
+          {dupErr && <div className="text-xs text-red-400">{dupErr}</div>}
+          <div className="flex gap-2">
+            <button type="button" className="btn btn-primary" disabled={dupBusy} onClick={duplicateService}>{dupBusy ? "Duplicating…" : "Duplicate"}</button>
+            <button type="button" className="btn btn-ghost" onClick={() => setDupTime(null)}>Cancel</button>
+          </div>
+        </div>
+      )}
 
       {templateName !== null && (
         <div className="card p-4 space-y-2">
@@ -267,10 +313,6 @@ export default function EditItineraryPage() {
             <input id="bible_passage" defaultValue={it.bible_passage ?? ""} onBlur={(e) => { if ((e.target.value || null) !== it.bible_passage) patchItinerary({ bible_passage: e.target.value || null }); }} />
           </div>
         </div>
-        <div>
-          <label>Memory verse</label>
-          <textarea id="memory_verse" rows={2} defaultValue={it.memory_verse ?? ""} onBlur={(e) => { if ((e.target.value || null) !== it.memory_verse) patchItinerary({ memory_verse: e.target.value || null }); }} />
-        </div>
       </div>
 
       {/* Sections */}
@@ -285,6 +327,7 @@ export default function EditItineraryPage() {
               expanded={expanded === s.id}
               dragging={dragging?.id === s.id}
               memoryVerse={it.memory_verse}
+              onVerseChange={(v) => patchItinerary({ memory_verse: v })}
               biblePassage={it.bible_passage}
               onToggle={() => setExpanded((cur) => (cur === s.id ? null : s.id))}
               onPatch={(patch) => patchSection(s.id, patch)}

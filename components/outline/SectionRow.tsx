@@ -16,7 +16,7 @@ const FIELD_LABEL: Record<"instructions" | "script" | "discussion_questions" | "
 
 export default function SectionRow({
   section, index, row, expanded, dragging,
-  memoryVerse, biblePassage,
+  memoryVerse, biblePassage, onVerseChange,
   onToggle, onPatch, onMove, onDuplicate, onDelete,
   isFirst, isLast, dragHandleProps,
 }: {
@@ -26,6 +26,7 @@ export default function SectionRow({
   expanded: boolean;
   dragging: boolean;
   memoryVerse: string | null;
+  onVerseChange: (verse: string | null) => void;
   biblePassage: string | null;
   onToggle: () => void;
   onPatch: (patch: Partial<Section>) => void;
@@ -119,16 +120,25 @@ export default function SectionRow({
           </div>
 
           {/* Type-specific content */}
-          {(type === "memory_verse" || type === "memory_verse_check") && (
+          {type === "memory_verse" && (
+            <div>
+              <label>This week's memory verse</label>
+              <textarea
+                rows={3}
+                defaultValue={memoryVerse ?? ""}
+                placeholder={'e.g. "Trust in the LORD with all your heart…" — Proverbs 3:5'}
+                onBlur={(e) => { const v = e.target.value || null; if (v !== memoryVerse) onVerseChange(v); }}
+              />
+              <div className="text-xs text-[#9fb0d3] mt-1">Shown on the leading screen and used by the Memory Verse Check.</div>
+            </div>
+          )}
+          {type === "memory_verse_check" && (
             <div className="p-3 rounded bg-[#0b1220] border border-[#1f2a44]">
               <div className="text-xs text-[#9fb0d3]">Memory verse</div>
               {memoryVerse ? (
                 <div className="italic whitespace-pre-line mt-1">{memoryVerse}</div>
               ) : (
-                <div className="text-sm text-[#9fb0d3] mt-1">
-                  No memory verse set yet ·{" "}
-                  <button type="button" className="underline" onClick={() => focusField("memory_verse")}>Set it above</button>
-                </div>
+                <div className="text-sm text-[#9fb0d3] mt-1">No memory verse set yet · add or open the Memory Verse section to enter it.</div>
               )}
             </div>
           )}

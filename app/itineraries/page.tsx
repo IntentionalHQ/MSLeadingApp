@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { todayLocal } from "@/lib/dates";
+import { todayLocal, parseClock, formatClock } from "@/lib/dates";
 import PageHeader from "@/components/PageHeader";
 import Confirm from "@/components/Confirm";
 import type { Itinerary } from "@/lib/types";
@@ -24,13 +24,14 @@ export default function ItinerariesPage() {
 
   const sundays = items.filter((i) => !i.is_template);
   const templates = items.filter((i) => i.is_template);
+  const byStart = (a: Itinerary, b: Itinerary) => (parseClock(a.start_time) ?? 9999) - (parseClock(b.start_time) ?? 9999);
 
   const upcoming = sundays
     .filter((i) => i.scheduled_date && i.scheduled_date >= today)
-    .sort((a, b) => a.scheduled_date!.localeCompare(b.scheduled_date!)); // soonest first
+    .sort((a, b) => a.scheduled_date!.localeCompare(b.scheduled_date!) || byStart(a, b)); // soonest first, then by service time
   const past = sundays
     .filter((i) => !i.scheduled_date || i.scheduled_date < today)
-    .sort((a, b) => (b.scheduled_date ?? "").localeCompare(a.scheduled_date ?? "")); // most recent first, nulls last
+    .sort((a, b) => (b.scheduled_date ?? "").localeCompare(a.scheduled_date ?? "") || byStart(a, b)); // most recent first, nulls last
 
   const row = (it: Itinerary, useTemplate = false) => (
     <li key={it.id} className="card p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -38,6 +39,7 @@ export default function ItinerariesPage() {
         <div className="font-semibold truncate">{it.title}</div>
         <div className="text-xs text-[#9fb0d3]">
           {it.lesson_title ?? "—"} · {it.scheduled_date ?? new Date(it.created_at).toLocaleDateString()}
+          {parseClock(it.start_time) !== null && <span className="text-blue-300"> · {formatClock(parseClock(it.start_time)!)}</span>}
         </div>
       </div>
       <div className="flex gap-2 shrink-0">
