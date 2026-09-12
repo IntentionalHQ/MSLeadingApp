@@ -7,7 +7,7 @@ export default function StandaloneGamesPage() {
     <GamesHub
       hrefFor={standaloneGameRoutePath}
       backHref="/"
-      backLabel="← Home"
+      backLabel="Home"
       subtitle="Play any game on its own — no Sunday itinerary needed. Results still save to team scores."
     />
   );

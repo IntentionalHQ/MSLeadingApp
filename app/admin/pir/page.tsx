@@ -1,7 +1,8 @@
 "use client";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import PageHeader from "@/components/PageHeader";
+import Confirm from "@/components/Confirm";
 import type { PirQuestion } from "@/lib/types";
 
 type Draft = Partial<PirQuestion>;
@@ -76,20 +77,18 @@ export default function PirAdminPage() {
     load();
   };
   const del = async (p: PirQuestion) => {
-    if (!confirm(`Delete this question?`)) return;
     await supabase.from("pir_questions").delete().eq("id", p.id);
     load();
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <Link href="/admin" className="text-xs text-[#9fb0d3]">← All banks</Link>
-          <h1>Bible Price Is Right — Questions</h1>
-        </div>
-        <button onClick={startNew} className="btn btn-primary">+ New Question</button>
-      </div>
+      <PageHeader
+        title="Price Is Right Questions"
+        backHref="/admin"
+        backLabel="Question banks"
+        right={<button onClick={startNew} className="btn btn-primary">+ New Question</button>}
+      />
 
       <div className="card p-3 space-y-2">
         <div className="flex gap-2 flex-wrap items-center">
@@ -169,7 +168,7 @@ export default function PirAdminPage() {
               <div className="flex gap-1 shrink-0">
                 <button onClick={() => toggleActive(p)} className="btn btn-ghost">{p.active ? "Disable" : "Enable"}</button>
                 <button onClick={() => startEdit(p)} className="btn btn-ghost">Edit</button>
-                <button onClick={() => del(p)} className="btn btn-ghost">🗑</button>
+                <Confirm label="🗑" title="Delete question" onConfirm={() => del(p)} className="btn btn-ghost" />
               </div>
             </div>
           </div>

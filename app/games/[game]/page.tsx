@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { GAMES_BY_ID, GameId } from "@/lib/games";
+import PageHeader from "@/components/PageHeader";
 
 export default function StandaloneGameStubPage() {
   const { game } = useParams<{ game: string }>();
@@ -19,12 +20,11 @@ export default function StandaloneGameStubPage() {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <h1>
-          <span className="mr-2">{def.icon}</span>{def.label}
-        </h1>
-        <Link href="/games" className="btn btn-ghost">← All games</Link>
-      </div>
+      <PageHeader
+        title={<><span className="mr-2" aria-hidden>{def.icon}</span>{def.label}</>}
+        backHref="/games"
+        backLabel="All games"
+      />
 
       <div className="card p-4 space-y-3">
         <div>
