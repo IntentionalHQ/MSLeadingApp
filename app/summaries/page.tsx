@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import PageHeader from "@/components/PageHeader";
 import type { Contest } from "@/lib/types";
 
 export default function SummariesPage() {
@@ -20,8 +21,9 @@ export default function SummariesPage() {
 
   return (
     <div className="space-y-6">
+      <PageHeader title="History" />
       <div>
-        <h1>Past Seasons</h1>
+        <h2>Seasons</h2>
         {contests.length === 0 ? (
           <p className="text-sm text-[#9fb0d3] mt-2">No past seasons yet.</p>
         ) : (
@@ -57,28 +59,30 @@ export default function SummariesPage() {
       </div>
 
       <div>
-        <h1>Group Summaries</h1>
+        <h2>Sundays</h2>
         {items.length === 0 && <p className="text-sm text-[#9fb0d3] mt-2">No summaries yet.</p>}
         <ul className="space-y-2 mt-2">
           {items.map((s) => (
             <li key={s.id} className="card p-3">
-              <div className="flex justify-between">
-                <div className="font-bold">{s.lesson_title ?? "Sunday"}</div>
-                <div className="text-sm text-[#9fb0d3]">{s.date}</div>
-              </div>
-              <div className="text-sm">{s.bible_passage ?? ""}</div>
-              <div className="text-sm text-[#9fb0d3] mt-1">Game: {s.game_played ?? "—"}</div>
-              {s.team_points && (
-                <ul className="mt-2 text-sm">
-                  {Object.entries(s.team_points).map(([tid, p]: any) => (
-                    <li key={tid} className="flex justify-between">
-                      <span>{p.name}</span>
-                      <span>+{p.points_this_group} · verses {p.memory_verse_success} · total {p.new_total}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {s.leader_notes && <div className="mt-2 text-sm italic">"{s.leader_notes}"</div>}
+              <details>
+                <summary className="cursor-pointer flex justify-between items-center gap-2">
+                  <span className="font-bold truncate">{s.lesson_title ?? "Sunday"}</span>
+                  <span className="text-sm text-[#9fb0d3] shrink-0">{s.date}{s.game_played ? ` · ${s.game_played}` : ""}</span>
+                </summary>
+                <div className="mt-2 text-sm">{s.bible_passage ?? ""}</div>
+                <div className="text-sm text-[#9fb0d3] mt-1">Game: {s.game_played ?? "—"}</div>
+                {s.team_points && (
+                  <ul className="mt-2 text-sm">
+                    {Object.entries(s.team_points).map(([tid, p]: any) => (
+                      <li key={tid} className="flex justify-between">
+                        <span>{p.name}</span>
+                        <span>+{p.points_this_group} · verses {p.memory_verse_success} · total {p.new_total}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {s.leader_notes && <div className="mt-2 text-sm italic">"{s.leader_notes}"</div>}
+              </details>
             </li>
           ))}
         </ul>
