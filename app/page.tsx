@@ -17,7 +17,8 @@ function heroLabel(date: string, today: string): { text: string; cls: string } {
 
 export default function Home() {
   const [heroes, setHeroes] = useState<Itinerary[]>([]); // every service on the next upcoming date
-  const [recent, setRecent] = useState<Itinerary[]>([]);
+  const [upcoming, setUpcoming] = useState<Itinerary[]>([]); // future Sundays after the hero date
+  const [past, setPast] = useState<Itinerary[]>([]);         // most recent Sundays already gone
   const [loading, setLoading] = useState(true);
   const today = todayLocal();
 
@@ -35,20 +36,41 @@ export default function Home() {
           .from("itineraries")
           .select("*")
           .eq("is_template", false)
-          .order("scheduled_date", { ascending: false, nullsFirst: false })
-          .limit(6),
+          .lt("scheduled_date", today)
+          .order("scheduled_date", { ascending: false })
+          .limit(5),
       ]);
-      const first = up?.[0]?.scheduled_date;
-      const sameDay = ((up ?? []) as Itinerary[]).filter((i) => i.scheduled_date === first);
-      sameDay.sort((a, b) => (parseClock(a.start_time) ?? 9999) - (parseClock(b.start_time) ?? 9999));
+      const all = ((up ?? []) as Itinerary[]);
+      const first = all[0]?.scheduled_date;
+      const byStart = (a: Itinerary, b: Itinerary) => (parseClock(a.start_time) ?? 9999) - (parseClock(b.start_time) ?? 9999);
+      const sameDay = all.filter((i) => i.scheduled_date === first).sort(byStart);
+      const later = all.filter((i) => i.scheduled_date !== first).sort((a, b) => a.scheduled_date!.localeCompare(b.scheduled_date!) || byStart(a, b));
       setHeroes(sameDay);
-      setRecent(rec ?? []);
+      setUpcoming(later);
+      setPast((rec ?? []) as Itinerary[]);
       setLoading(false);
     })();
   }, [today]);
 
   const hero = heroes[0] ?? null;
   const label = hero?.scheduled_date ? heroLabel(hero.scheduled_date, today) : null;
+
+  const row = (it: Itinerary) => (
+    <li key={it.id} className="py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <div className="min-w-0">
+        <div className="font-semibold truncate flex items-center gap-2"><span className="truncate">{it.title}</span><StatusTag status={it.status} /></div>
+        {it.lesson_title && <div className="text-xs text-[#9fb0d3] truncate">{it.lesson_title}</div>}
+        <div className="text-xs text-[#9fb0d3]">
+          {it.scheduled_date ?? new Date(it.created_at).toLocaleDateString()}
+          {parseClock(it.start_time) !== null && <span className="text-blue-300"> · {formatClock(parseClock(it.start_time)!)}</span>}
+        </div>
+      </div>
+      <div className="flex gap-2 shrink-0">
+        <Link href={`/itineraries/${it.id}/edit`} className="btn btn-ghost flex-1 sm:flex-none">Edit</Link>
+        <Link href={`/itineraries/${it.id}/lead`} className="btn btn-primary flex-1 sm:flex-none">Lead</Link>
+      </div>
+    </li>
+  );
 
   return (
     <div className="space-y-4">
@@ -96,30 +118,27 @@ export default function Home() {
       </div>
 
       <div className="card p-4">
+        <h2>Upcoming Sundays</h2>
+        {loading ? (
+          <p className="text-sm text-[#9fb0d3] mt-2">Loading…</p>
+        ) : upcoming.length === 0 ? (
+          <div className="mt-2">
+            <p className="text-sm text-[#9fb0d3]">{hero ? "Nothing planned after the next one yet." : "Nothing planned yet."}</p>
+            <Link href="/itineraries/new" className="btn btn-primary w-full mt-3">➕ Plan a Sunday</Link>
+          </div>
+        ) : (
+          <ul className="mt-2 divide-y divide-[#1f2a44]">{upcoming.map((it) => row(it))}</ul>
+        )}
+      </div>
+
+      <div className="card p-4">
         <h2>Recent Sundays</h2>
         {loading ? (
           <p className="text-sm text-[#9fb0d3] mt-2">Loading…</p>
-        ) : recent.length === 0 ? (
-          <div className="mt-2">
-            <p className="text-sm text-[#9fb0d3]">No Sundays yet. Plan your first one.</p>
-            <Link href="/itineraries/new" className="btn btn-primary w-full mt-3">➕ Plan this Sunday</Link>
-          </div>
+        ) : past.length === 0 ? (
+          <p className="text-sm text-[#9fb0d3] mt-2">No past Sundays yet.</p>
         ) : (
-          <ul className="mt-2 divide-y divide-[#1f2a44]">
-            {recent.map((it) => (
-              <li key={it.id} className="py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="font-semibold truncate flex items-center gap-2"><span className="truncate">{it.title}</span><StatusTag status={it.status} /></div>
-                  {it.lesson_title && <div className="text-xs text-[#9fb0d3] truncate">{it.lesson_title}</div>}
-                  <div className="text-xs text-[#9fb0d3]">{it.scheduled_date ?? new Date(it.created_at).toLocaleDateString()}</div>
-                </div>
-                <div className="flex gap-2 shrink-0">
-                  <Link href={`/itineraries/${it.id}/edit`} className="btn btn-ghost flex-1 sm:flex-none">Edit</Link>
-                  <Link href={`/itineraries/${it.id}/lead`} className="btn btn-primary flex-1 sm:flex-none">Lead</Link>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <ul className="mt-2 divide-y divide-[#1f2a44]">{past.map((it) => row(it))}</ul>
         )}
         <Link href="/itineraries" className="btn btn-ghost w-full mt-3">View all Sundays</Link>
       </div>
