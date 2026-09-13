@@ -1,5 +1,5 @@
 export type SectionType =
-  | "free_hangout" | "rules" | "memory_verse" | "bible_reading"
+  | "free_hangout" | "rules" | "memory_verse" | "bible_reading" | "devotional"
   | "discussion" | "prayer" | "memory_verse_check" | "group_game"
   | "score_recording" | "custom";
 
@@ -8,6 +8,7 @@ export const SECTION_LABEL: Record<SectionType, string> = {
   rules: "Rules / Reset",
   memory_verse: "Memory Verse",
   bible_reading: "Bible Reading",
+  devotional: "Devotional",
   discussion: "Discussion",
   prayer: "Prayer",
   memory_verse_check: "Memory Verse Check",
@@ -17,7 +18,7 @@ export const SECTION_LABEL: Record<SectionType, string> = {
 };
 
 export const SECTION_ICON: Record<SectionType, string> = {
-  free_hangout: "☕", rules: "📏", memory_verse: "📖", bible_reading: "📜", discussion: "💬",
+  free_hangout: "☕", rules: "📏", memory_verse: "📖", bible_reading: "📜", devotional: "🕯️", discussion: "💬",
   prayer: "🙏", memory_verse_check: "✅", group_game: "🎮", score_recording: "📝", custom: "▫️",
 };
 
@@ -59,6 +60,7 @@ export const SECTION_DEFAULTS: Record<SectionType, { title: string; duration: nu
   memory_verse: { title: "Memory Verse", duration: 5 },
   memory_verse_check: { title: "Memory Verse Check", duration: 8 },
   bible_reading: { title: "Bible Reading", duration: 10 },
+  devotional: { title: "Devotional", duration: 10 },
   discussion: { title: "Discussion", duration: 15 },
   prayer: { title: "Prayer", duration: 5 },
   group_game: { title: "Group Game", duration: 20 },
@@ -69,7 +71,7 @@ export const SECTION_DEFAULTS: Record<SectionType, { title: string; duration: nu
 /** Order the palette chips are shown in (the natural flow of a Sunday). */
 export const SECTION_PALETTE_ORDER: SectionType[] = [
   "free_hangout", "rules", "memory_verse", "memory_verse_check", "bible_reading",
-  "discussion", "prayer", "group_game", "score_recording", "custom",
+  "devotional", "discussion", "prayer", "group_game", "score_recording", "custom",
 ];
 
 /** Which detail fields each type shows in the editor. */
@@ -79,6 +81,7 @@ export const SECTION_FIELDS: Record<SectionType, Array<"instructions" | "script"
   memory_verse: ["script", "notes"],
   memory_verse_check: ["instructions", "script", "notes"],
   bible_reading: ["instructions", "script", "discussion_questions", "notes"],
+  devotional: ["notes", "script"],
   discussion: ["instructions", "discussion_questions", "notes"],
   prayer: ["script", "notes"],
   group_game: ["instructions", "notes"],

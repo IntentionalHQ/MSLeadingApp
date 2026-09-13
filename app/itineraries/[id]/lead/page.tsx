@@ -186,7 +186,15 @@ export default function LeaderModePage() {
             </div>
           )}
 
-          {current.instructions && <div className="mt-3"><div className="text-xs text-[#9fb0d3]">Instructions</div><div>{current.instructions}</div></div>}
+          {current.instructions && <div className="mt-3"><div className="text-xs text-[#9fb0d3]">Instructions</div><div className="whitespace-pre-line">{current.instructions}</div></div>}
+
+          {/* Devotional: the glance-down notes are the main thing on screen */}
+          {current.section_type === "devotional" && current.notes && (
+            <div className="mt-3 p-3 rounded bg-[#0b1220] border border-amber-600">
+              <div className="text-xs text-amber-400">Glance notes</div>
+              <div className="whitespace-pre-line mt-1 text-lg leading-relaxed">{current.notes}</div>
+            </div>
+          )}
 
           {/* Script — with inline quick edit */}
           <div className="mt-3 p-3 rounded bg-[#0b1220] border border-[#1f2a44]">
@@ -198,7 +206,7 @@ export default function LeaderModePage() {
             </div>
             {editingField === "script" ? (
               <div className="mt-1 space-y-2">
-                <AutoTextarea rows={4} defaultValue={current.script ?? ""} onBlur={(e) => patchCurrent({ script: e.target.value || null })} />
+                <AutoTextarea key={current.id} rows={4} defaultValue={current.script ?? ""} onBlur={(e) => patchCurrent({ script: e.target.value || null })} />
                 <button className="btn btn-ghost" onClick={() => setEditingField(null)}>Done</button>
               </div>
             ) : (
@@ -216,7 +224,7 @@ export default function LeaderModePage() {
             </div>
             {editingField === "discussion_questions" ? (
               <div className="mt-1 space-y-2">
-                <AutoTextarea rows={4} defaultValue={current.discussion_questions ?? ""} onBlur={(e) => patchCurrent({ discussion_questions: e.target.value || null })} />
+                <AutoTextarea key={current.id} rows={4} defaultValue={current.discussion_questions ?? ""} onBlur={(e) => patchCurrent({ discussion_questions: e.target.value || null })} />
                 <button className="btn btn-ghost" onClick={() => setEditingField(null)}>Done</button>
               </div>
             ) : (
@@ -228,6 +236,7 @@ export default function LeaderModePage() {
           <div className="mt-3">
             <div className="text-xs text-[#9fb0d3]">Notes (optional — visible here while leading)</div>
             <AutoTextarea
+              key={current.id}
               rows={2}
               defaultValue={current.notes ?? ""}
               placeholder="Anything to remember for this section this week…"

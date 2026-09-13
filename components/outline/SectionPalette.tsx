@@ -9,6 +9,7 @@ const PALETTE_LABEL: Record<SectionType, string> = {
   memory_verse: "Verse",
   memory_verse_check: "Verse Check",
   bible_reading: "Reading",
+  devotional: "Devotional",
   discussion: "Discussion",
   prayer: "Prayer",
   group_game: "Game",
