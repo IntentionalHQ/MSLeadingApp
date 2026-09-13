@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { todayLocal, parseClock, formatClock } from "@/lib/dates";
 import type { Itinerary } from "@/lib/types";
+import StatusTag from "@/components/StatusTag";
 
 function heroLabel(date: string, today: string): { text: string; cls: string } {
   if (date === today) return { text: "Today", cls: "text-green-400" };
@@ -66,9 +67,12 @@ export default function Home() {
             <div className={heroes.length > 1 ? "mt-2 space-y-2" : ""}>
               {heroes.map((h) => (
                 <div key={h.id} className={heroes.length > 1 ? "p-3 rounded-lg bg-[#0b1220] border border-[#1f2a44]" : ""}>
-                  <div className="text-xl font-bold">
-                    {parseClock(h.start_time) !== null && <span className="text-blue-300 font-mono tabular-nums mr-2">{formatClock(parseClock(h.start_time)!)}</span>}
-                    {h.title}
+                  <div className="text-xl font-bold flex items-center gap-2 flex-wrap">
+                    <span>
+                      {parseClock(h.start_time) !== null && <span className="text-blue-300 font-mono tabular-nums mr-2">{formatClock(parseClock(h.start_time)!)}</span>}
+                      {h.title}
+                    </span>
+                    <StatusTag status={h.status} />
                   </div>
                   {h.lesson_title && (
                     <div className="text-sm text-[#9fb0d3]">
@@ -105,7 +109,7 @@ export default function Home() {
             {recent.map((it) => (
               <li key={it.id} className="py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div className="min-w-0">
-                  <div className="font-semibold truncate">{it.title}</div>
+                  <div className="font-semibold truncate flex items-center gap-2"><span className="truncate">{it.title}</span><StatusTag status={it.status} /></div>
                   {it.lesson_title && <div className="text-xs text-[#9fb0d3] truncate">{it.lesson_title}</div>}
                   <div className="text-xs text-[#9fb0d3]">{it.scheduled_date ?? new Date(it.created_at).toLocaleDateString()}</div>
                 </div>

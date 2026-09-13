@@ -22,6 +22,9 @@ export const SECTION_ICON: Record<SectionType, string> = {
   prayer: "🙏", memory_verse_check: "✅", group_game: "🎮", score_recording: "📝", custom: "▫️",
 };
 
+/** Outline status: draft = work in progress, ready = ready to lead. */
+export type PlanStatus = "draft" | "ready";
+
 export type Itinerary = {
   id: string;
   title: string;
@@ -34,6 +37,7 @@ export type Itinerary = {
   start_time: string | null;
   slot_minutes: number | null;
   led_at: string | null;
+  status: PlanStatus | null;
 };
 
 export type Section = {

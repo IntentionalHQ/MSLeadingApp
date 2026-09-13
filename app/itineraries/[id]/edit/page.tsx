@@ -10,6 +10,7 @@ import { parseClock, formatClock } from "@/lib/dates";
 import PageHeader from "@/components/PageHeader";
 import Confirm from "@/components/Confirm";
 import DateInput from "@/components/DateInput";
+import StatusTag from "@/components/StatusTag";
 import SectionRow from "@/components/outline/SectionRow";
 import SectionPalette from "@/components/outline/SectionPalette";
 import TimelineFooter from "@/components/outline/TimelineFooter";
@@ -33,6 +34,13 @@ export default function EditItineraryPage() {
   const [dupBusy, setDupBusy] = useState(false);
   const [startErr, setStartErr] = useState(false);
   const [dragging, setDragging] = useState<{ id: string; overIndex: number } | null>(null);
+  // Edits autosave, but the leader still picks a status (in progress / ready).
+  // `dirty` = edited since the status was last set; leaving while dirty prompts.
+  const [dirty, setDirty] = useState(false);
+  const [leaveTo, setLeaveTo] = useState<string | null>(null); // href of the blocked navigation
+  const dirtyRef = useRef(false);
+  const markDirty = () => { dirtyRef.current = true; setDirty(true); };
+  const clearDirty = () => { dirtyRef.current = false; setDirty(false); };
 
   const listRef = useRef<HTMLDivElement | null>(null);
   const rectsRef = useRef<DOMRect[]>([]);
@@ -87,15 +95,18 @@ export default function EditItineraryPage() {
   }, [dragging, sections]);
 
   const patchItinerary = (patch: Partial<Itinerary>) => {
+    if (!("status" in patch)) markDirty();
     setIt((p) => (p ? { ...p, ...patch } : p));
     return track(supabase.from("itineraries").update(patch).eq("id", id));
   };
   const patchSection = (sid: string, patch: Partial<Section>) => {
+    markDirty();
     setSections((p) => p.map((s) => (s.id === sid ? { ...s, ...patch } : s)));
     return track(supabase.from("itinerary_sections").update(patch).eq("id", sid));
   };
 
   const addSection = async (type: SectionType) => {
+    markDirty();
     const def = SECTION_DEFAULTS[type];
     const { data } = await supabase.from("itinerary_sections").insert({
       itinerary_id: id, position: sections.length, title: def.title, section_type: type,
@@ -112,6 +123,7 @@ export default function EditItineraryPage() {
 
   const reorder = (from: number, to: number) => {
     if (from === to || from < 0 || to < 0 || from >= sections.length || to >= sections.length) return;
+    markDirty();
     const next = [...sections];
     const [moved] = next.splice(from, 1);
     next.splice(to, 0, moved);
@@ -124,6 +136,7 @@ export default function EditItineraryPage() {
   };
 
   const duplicate = async (s: Section) => {
+    markDirty();
     const { data } = await supabase.from("itinerary_sections").insert({
       itinerary_id: id, position: sections.length, title: `${s.title} (copy)`, section_type: s.section_type,
       duration_minutes: s.duration_minutes, instructions: s.instructions, script: s.script,
@@ -134,6 +147,7 @@ export default function EditItineraryPage() {
   };
 
   const remove = async (sid: string) => {
+    markDirty();
     await supabase.from("itinerary_sections").delete().eq("id", sid);
     const remaining = sections.filter((s) => s.id !== sid).map((s, i) => ({ ...s, position: i }));
     const changed = remaining.filter((s) => sections.find((p) => p.id === s.id)?.position !== s.position);
@@ -179,7 +193,7 @@ export default function EditItineraryPage() {
     const baseTitle = it.title.replace(/\s*·\s*\d{1,2}(:\d{2})?\s*[AaPp][Mm]?$/, "");
     const { data: newIt, error } = await supabase.from("itineraries").insert({
       title: `${baseTitle} · ${formatClock(parseClock(st)!)}`, is_template: false,
-      scheduled_date: it.scheduled_date, start_time: st, slot_minutes: it.slot_minutes,
+      scheduled_date: it.scheduled_date, start_time: st, slot_minutes: it.slot_minutes, status: "draft",
       lesson_title: it.lesson_title, bible_passage: it.bible_passage, memory_verse: it.memory_verse,
     }).select().single();
     if (error || !newIt) { setDupErr(error?.message ?? "Could not duplicate."); setDupBusy(false); return; }
@@ -214,6 +228,7 @@ export default function EditItineraryPage() {
   // their current values; sections are fully replaced.
   const applyImport = async (plan: ParsedPlan) => {
     if (!it) return;
+    markDirty();
     const patch: Partial<Itinerary> = {};
     for (const [k, v] of Object.entries(plan.itinerary)) if (v !== null && v !== undefined && v !== "") (patch as any)[k] = v;
     if (Object.keys(patch).length) {
@@ -266,6 +281,37 @@ export default function EditItineraryPage() {
     setDragging({ id: sectionId, overIndex: idx });
   };
 
+  const setStatus = async (status: "draft" | "ready") => {
+    // Flush any field still being edited so its blur-save runs first.
+    (document.activeElement as HTMLElement | null)?.blur?.();
+    await patchItinerary({ status });
+    clearDirty();
+  };
+
+  // Leaving with unmarked edits: browser prompt on close/refresh, and an
+  // in-app prompt for any link click (header nav, back link, Lead button).
+  useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!dirtyRef.current) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    const onClick = (e: MouseEvent) => {
+      if (!dirtyRef.current) return;
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const a = (e.target as HTMLElement | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
+      if (!a || a.target === "_blank" || a.hasAttribute("download")) return;
+      const href = a.getAttribute("href") || "";
+      if (!href.startsWith("/") || href === location.pathname) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setLeaveTo(href);
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    document.addEventListener("click", onClick, true);
+    return () => { window.removeEventListener("beforeunload", onBeforeUnload); document.removeEventListener("click", onClick, true); };
+  }, []);
+
   if (!it) return <div className="card p-4">Loading…</div>;
 
   const timeline = buildTimeline(it.start_time, sections);
@@ -275,12 +321,28 @@ export default function EditItineraryPage() {
     <div className="space-y-4 pb-20">
       <PageHeader
         title={it.title}
-        subtitle={timelineSummary(it.start_time, sections)}
+        subtitle={<span className="inline-flex items-center gap-2">{timelineSummary(it.start_time, sections)}<StatusTag status={it.status} />{dirty && <span className="text-xs text-amber-400">edited since marked</span>}</span>}
         backHref="/itineraries"
         backLabel="Sundays"
         right={
           <div className="flex items-center gap-2">
             <SaveIndicator state={state} />
+            <button
+              type="button"
+              className={"btn " + (it.status === "draft" ? "btn-primary !bg-amber-600 hover:!bg-amber-500" : "btn-ghost")}
+              onClick={() => setStatus("draft")}
+              title="Mark this outline as still being worked on"
+            >
+              {it.status === "draft" ? "✎ In progress" : "Save as in progress"}
+            </button>
+            <button
+              type="button"
+              className={"btn " + (it.status === "ready" ? "btn-primary !bg-green-600 hover:!bg-green-500" : "btn-ghost")}
+              onClick={() => setStatus("ready")}
+              title="Mark this outline as ready to lead"
+            >
+              {it.status === "ready" ? "✓ Ready to go" : "Save as ready"}
+            </button>
             <PlanFileMenu itinerary={it} sections={sections} loadPast={loadPast} onApply={applyImport} />
             <Link href={`/itineraries/${id}/lead`} className="btn btn-primary">▶ Lead</Link>
             <div className="relative" ref={menuRef}>
@@ -299,6 +361,23 @@ export default function EditItineraryPage() {
           </div>
         }
       />
+
+      {leaveTo && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+          <div className="card p-4 w-full max-w-md space-y-3">
+            <h2>Mark this outline before you go?</h2>
+            <p className="text-sm text-[#9fb0d3]">Your edits are already saved. Pick a status so the home screen shows whether this Sunday is still in progress or ready to lead.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button type="button" className="btn btn-primary !bg-amber-600 hover:!bg-amber-500" onClick={async () => { await setStatus("draft"); const to = leaveTo; setLeaveTo(null); router.push(to); }}>✎ In progress, then leave</button>
+              <button type="button" className="btn btn-primary !bg-green-600 hover:!bg-green-500" onClick={async () => { await setStatus("ready"); const to = leaveTo; setLeaveTo(null); router.push(to); }}>✓ Ready to go, then leave</button>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button type="button" className="btn btn-ghost" onClick={() => setLeaveTo(null)}>Stay here</button>
+              <button type="button" className="btn btn-ghost" onClick={() => { const to = leaveTo; clearDirty(); setLeaveTo(null); router.push(to); }}>Leave without marking</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {dupTime !== null && (
         <div className="card p-4 space-y-2">

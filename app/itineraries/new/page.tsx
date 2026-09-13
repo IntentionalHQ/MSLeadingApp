@@ -84,6 +84,7 @@ function NewSundayInner() {
       title, lesson_title: lesson || null, bible_passage: passage || null,
       memory_verse: null, scheduled_date: date, is_template: false,
       start_time: st || null, slot_minutes: slot ? parseInt(slot, 10) : null,
+      status: "draft",
     }).select().single();
     if (error || !newIt) { setCreateErr(error?.message ?? "Could not create this Sunday. Try again."); setBusy(false); return; }
 
