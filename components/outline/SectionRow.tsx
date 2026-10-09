@@ -7,6 +7,7 @@ import { formatClock } from "@/lib/dates";
 import { GAMES, GAMES_BY_ID, gameLabel } from "@/lib/games";
 import Confirm from "@/components/Confirm";
 import AutoTextarea from "@/components/AutoTextarea";
+import DeckPicker from "@/components/cards/DeckPicker";
 
 const FIELD_LABEL: Record<"instructions" | "script" | "discussion_questions" | "notes", string> = {
   instructions: "Instructions",
@@ -155,6 +156,13 @@ export default function SectionRow({
                 </div>
               )}
             </div>
+          )}
+          {type === "cue_cards" && (
+            <DeckPicker
+              value={section.cue_deck_id}
+              onChange={(deckId) => onPatch({ cue_deck_id: deckId })}
+              suggestedTitle={section.title !== "Cue Cards" ? section.title : null}
+            />
           )}
           {type === "group_game" && (
             <div>

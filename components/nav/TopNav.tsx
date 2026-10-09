@@ -6,6 +6,7 @@ import ScoreBar from "@/components/ScoreBar";
 
 const PILLS = [
   { href: "/itineraries", icon: "📅", label: "Sundays" },
+  { href: "/cards", icon: "🃏", label: "Cards" },
   { href: "/games", icon: "🎮", label: "Games" },
   { href: "/teams", icon: "🏆", label: "Teams" },
   { href: "/summaries", icon: "📜", label: "History" },
@@ -34,6 +35,10 @@ export default function TopNav() {
       document.removeEventListener("keydown", onKey);
     };
   }, [menuOpen]);
+
+  // The cue card presenter is full-screen: no chrome at all, and unmounting
+  // ScoreBar here also stops its 2s score poll while the leader is speaking.
+  if (pathname.endsWith("/present")) return null;
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 

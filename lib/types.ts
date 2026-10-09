@@ -1,6 +1,6 @@
 export type SectionType =
   | "free_hangout" | "rules" | "memory_verse" | "bible_reading" | "devotional"
-  | "discussion" | "prayer" | "memory_verse_check" | "group_game"
+  | "discussion" | "prayer" | "memory_verse_check" | "group_game" | "cue_cards"
   | "score_recording" | "custom";
 
 export const SECTION_LABEL: Record<SectionType, string> = {
@@ -9,6 +9,7 @@ export const SECTION_LABEL: Record<SectionType, string> = {
   memory_verse: "Memory Verse",
   bible_reading: "Bible Reading",
   devotional: "Devotional",
+  cue_cards: "Cue Cards",
   discussion: "Discussion",
   prayer: "Prayer",
   memory_verse_check: "Memory Verse Check",
@@ -18,7 +19,7 @@ export const SECTION_LABEL: Record<SectionType, string> = {
 };
 
 export const SECTION_ICON: Record<SectionType, string> = {
-  free_hangout: "☕", rules: "📏", memory_verse: "📖", bible_reading: "📜", devotional: "🕯️", discussion: "💬",
+  free_hangout: "☕", rules: "📏", memory_verse: "📖", bible_reading: "📜", devotional: "🕯️", cue_cards: "🃏", discussion: "💬",
   prayer: "🙏", memory_verse_check: "✅", group_game: "🎮", score_recording: "📝", custom: "▫️",
 };
 
@@ -55,6 +56,7 @@ export type Section = {
   completed: boolean;
   completed_at: string | null;
   chosen_game: string | null;
+  cue_deck_id: string | null;
 };
 
 /** Defaults used when a section is inserted from the palette. */
@@ -65,6 +67,7 @@ export const SECTION_DEFAULTS: Record<SectionType, { title: string; duration: nu
   memory_verse_check: { title: "Memory Verse Check", duration: 8 },
   bible_reading: { title: "Bible Reading", duration: 10 },
   devotional: { title: "Devotional", duration: 10 },
+  cue_cards: { title: "Cue Cards", duration: 10 },
   discussion: { title: "Discussion", duration: 15 },
   prayer: { title: "Prayer", duration: 5 },
   group_game: { title: "Group Game", duration: 20 },
@@ -75,7 +78,7 @@ export const SECTION_DEFAULTS: Record<SectionType, { title: string; duration: nu
 /** Order the palette chips are shown in (the natural flow of a Sunday). */
 export const SECTION_PALETTE_ORDER: SectionType[] = [
   "free_hangout", "rules", "memory_verse", "memory_verse_check", "bible_reading",
-  "devotional", "discussion", "prayer", "group_game", "score_recording", "custom",
+  "devotional", "cue_cards", "discussion", "prayer", "group_game", "score_recording", "custom",
 ];
 
 /** Which detail fields each type shows in the editor. */
@@ -86,6 +89,7 @@ export const SECTION_FIELDS: Record<SectionType, Array<"instructions" | "script"
   memory_verse_check: ["instructions", "script", "notes"],
   bible_reading: ["instructions", "script", "discussion_questions", "notes"],
   devotional: ["notes", "script"],
+  cue_cards: ["notes"],
   discussion: ["instructions", "discussion_questions", "notes"],
   prayer: ["script", "notes"],
   group_game: ["instructions", "notes"],
@@ -155,4 +159,39 @@ export type Question = {
   format: "multiple_choice" | "open_answer";
   choices: string[] | null;
   active: boolean;
+};
+
+// ---------------------------------------------------------------------------
+// Cue cards: a deck of stage-ready speaking cards. Decks are standalone (Cards
+// tab) and a Cue Cards section links to one by id. Bullet symbols and highlight
+// colours mirror the notes editor in the leader's task-os app; see lib/cueCards.ts.
+// ---------------------------------------------------------------------------
+export type CueSymbol = "star" | "arrow" | "search" | "hammer" | "bang" | "question" | "quote";
+export type CueColor = "" | "yellow" | "green" | "blue" | "pink" | "purple" | "orange";
+
+export type CueBullet = {
+  id: string;
+  text: string;
+  symbols: CueSymbol[];
+  color: CueColor;
+};
+
+export type CueDeck = {
+  id: string;
+  title: string;
+  passage: string | null;
+  subtitle: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CueCard = {
+  id: string;
+  deck_id: string;
+  position: number;
+  title: string;
+  scripture_ref: string | null;
+  bullets: CueBullet[];
+  key_line: string | null;
+  transition: string | null;
 };

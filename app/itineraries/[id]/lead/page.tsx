@@ -248,6 +248,18 @@ export default function LeaderModePage() {
             {current.section_type === "memory_verse_check" && (
               <Link href={`/itineraries/${id}/verse`} className="btn btn-ghost btn-lg">✅ Open Memory Verse Check</Link>
             )}
+            {current.section_type === "cue_cards" && (
+              current.cue_deck_id ? (
+                <Link
+                  href={`/cards/${current.cue_deck_id}/present?back=${encodeURIComponent(`/itineraries/${id}/lead`)}&since=${sectionStartMs}&plan=${current.duration_minutes ?? 0}`}
+                  className="btn btn-primary btn-lg"
+                >
+                  🃏 Present cards
+                </Link>
+              ) : (
+                <Link href={`/itineraries/${id}/edit`} className="btn btn-ghost btn-lg">🃏 No deck linked · pick one in the outline</Link>
+              )
+            )}
             {current.section_type === "group_game" && (
               current.chosen_game && current.chosen_game !== "pick_at_time" ? (
                 <>

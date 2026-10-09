@@ -3,7 +3,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import type { Itinerary, Section, SectionType } from "@/lib/types";
+import type { CueCard, Itinerary, Section, SectionType } from "@/lib/types";
+import { normalizeCard } from "@/lib/cueCards";
 import { SECTION_DEFAULTS } from "@/lib/types";
 import { buildTimeline, timelineSummary } from "@/lib/schedule";
 import { parseClock, formatClock } from "@/lib/dates";
@@ -140,7 +141,7 @@ export default function EditItineraryPage() {
     const { data } = await supabase.from("itinerary_sections").insert({
       itinerary_id: id, position: sections.length, title: `${s.title} (copy)`, section_type: s.section_type,
       duration_minutes: s.duration_minutes, instructions: s.instructions, script: s.script,
-      discussion_questions: s.discussion_questions, notes: s.notes, chosen_game: s.chosen_game,
+      discussion_questions: s.discussion_questions, notes: s.notes, chosen_game: s.chosen_game, cue_deck_id: s.cue_deck_id,
       completed: false, completed_at: null,
     }).select().single();
     if (data) setSections((p) => [...p, data as Section]);
@@ -170,7 +171,7 @@ export default function EditItineraryPage() {
         const { error: e2 } = await supabase.from("itinerary_sections").insert(sections.map((s) => ({
           itinerary_id: newIt.id, position: s.position, title: s.title, section_type: s.section_type,
           duration_minutes: s.duration_minutes, instructions: s.instructions, script: s.script,
-          discussion_questions: s.discussion_questions, notes: s.notes, chosen_game: s.chosen_game,
+          discussion_questions: s.discussion_questions, notes: s.notes, chosen_game: s.chosen_game, cue_deck_id: s.cue_deck_id,
           completed: false, completed_at: null,
         })));
         if (e2) return { error: e2 };
@@ -201,7 +202,7 @@ export default function EditItineraryPage() {
       const { error: e2 } = await supabase.from("itinerary_sections").insert(sections.map((s) => ({
         itinerary_id: newIt.id, position: s.position, title: s.title, section_type: s.section_type,
         duration_minutes: s.duration_minutes, instructions: s.instructions, script: s.script,
-        discussion_questions: s.discussion_questions, notes: s.notes, chosen_game: s.chosen_game,
+        discussion_questions: s.discussion_questions, notes: s.notes, chosen_game: s.chosen_game, cue_deck_id: s.cue_deck_id,
         completed: false, completed_at: null,
       })));
       if (e2) { setDupErr(e2.message); setDupBusy(false); return; }
@@ -224,6 +225,14 @@ export default function EditItineraryPage() {
     return list.map((itinerary) => ({ itinerary, sections: all.filter((s) => s.itinerary_id === itinerary.id) }));
   };
 
+  // Cards of the deck linked from the first Cue Cards section, for the template.
+  const loadDeckCards = async (): Promise<CueCard[]> => {
+    const deckId = sections.find((s) => s.section_type === "cue_cards" && s.cue_deck_id)?.cue_deck_id;
+    if (!deckId) return [];
+    const { data } = await supabase.from("cue_cards").select("*").eq("deck_id", deckId).order("position");
+    return ((data ?? []) as any[]).map(normalizeCard);
+  };
+
   // Replace this Sunday's outline with an uploaded plan. Blank plan fields keep
   // their current values; sections are fully replaced.
   const applyImport = async (plan: ParsedPlan) => {
@@ -244,8 +253,39 @@ export default function EditItineraryPage() {
       completed: false, completed_at: null,
     }))).select();
     if (insErr) throw insErr;
+
+    // Cue cards: reuse the deck this Sunday already linked (so the link on
+    // other services survives), else make one named after the lesson.
+    let rows = (inserted ?? []) as Section[];
+    if (plan.deck && plan.deck.cards.length) {
+      const merged = { ...it, ...patch };
+      let deckId = sections.find((s) => s.section_type === "cue_cards" && s.cue_deck_id)?.cue_deck_id ?? null;
+      const dp: Record<string, string> = {};
+      if (plan.deck.deck.title) dp.title = plan.deck.deck.title;
+      if (plan.deck.deck.passage) dp.passage = plan.deck.deck.passage;
+      if (plan.deck.deck.subtitle) dp.subtitle = plan.deck.deck.subtitle;
+      if (deckId) {
+        await supabase.from("cue_decks").update({ ...dp, updated_at: new Date().toISOString() }).eq("id", deckId);
+        await supabase.from("cue_cards").delete().eq("deck_id", deckId);
+      } else {
+        const { data: d, error } = await supabase.from("cue_decks").insert({
+          title: dp.title || merged.lesson_title || merged.title,
+          passage: dp.passage || merged.bible_passage || null,
+          subtitle: dp.subtitle || null,
+        }).select().single();
+        if (error || !d) throw error ?? new Error("Could not create the deck.");
+        deckId = (d as any).id as string;
+      }
+      const { error: cardErr } = await supabase.from("cue_cards").insert(plan.deck.cards.map((c, i) => ({ deck_id: deckId, position: i, ...c })));
+      if (cardErr) throw cardErr;
+      const target = rows.find((s) => s.section_type === "cue_cards");
+      if (target) {
+        await supabase.from("itinerary_sections").update({ cue_deck_id: deckId }).eq("id", target.id);
+        rows = rows.map((s) => (s.id === target.id ? { ...s, cue_deck_id: deckId } : s));
+      }
+    }
     setIt((p) => (p ? { ...p, ...patch, led_at: p.led_at } : p));
-    setSections((inserted ?? []) as Section[]);
+    setSections(rows);
     setExpanded(null);
   };
 
@@ -343,7 +383,7 @@ export default function EditItineraryPage() {
             >
               {it.status === "ready" ? "✓ Ready to go" : "Save as ready"}
             </button>
-            <PlanFileMenu itinerary={it} sections={sections} loadPast={loadPast} onApply={applyImport} />
+            <PlanFileMenu itinerary={it} sections={sections} loadPast={loadPast} loadDeckCards={loadDeckCards} onApply={applyImport} />
             <Link href={`/itineraries/${id}/lead`} className="btn btn-primary">▶ Lead</Link>
             <div className="relative" ref={menuRef}>
               <button type="button" className="btn btn-ghost" aria-label="More actions" onClick={() => setMenuOpen((o) => !o)}>⋯</button>

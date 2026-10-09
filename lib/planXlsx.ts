@@ -2,9 +2,10 @@
 // in, then upload it back to replace the Sunday's outline. The uploaded file
 // is parsed in the browser and never stored anywhere.
 
-import type { Itinerary, Section, SectionType } from "./types";
+import type { CueCard, Itinerary, Section, SectionType } from "./types";
 import { SECTION_LABEL } from "./types";
 import { GAMES } from "./games";
+import { appendCueCardSheets, cueCardInstructionRows, cueCardReferenceRows, parseCueCardSheets, type ParsedDeck } from "./cueCardsXlsx";
 
 export type PastOutline = { itinerary: Itinerary; sections: Section[] };
 
@@ -13,6 +14,7 @@ export type ParsedPlan = {
   sections: Array<Pick<Section, "title" | "section_type" | "duration_minutes" | "chosen_game" | "instructions" | "script" | "discussion_questions" | "notes">>;
   errors: string[];
   warnings: string[];
+  deck: ParsedDeck | null; // cue card sheets, when the workbook has them
 };
 
 // ---------------------------------------------------------------------------
@@ -59,6 +61,7 @@ function readmeRows(planDate: string): string[][] {
     "  • Plan = the header for the Sunday: title, date, start time, slot length, lesson, passage, memory verse. Fill column B.",
     "  • Sections = the outline, one row per section in the order they happen. This is the main sheet.",
     "  • Reference = the section types and games the app understands, and what each column is for.",
+    "  • Cue Cards + Card Bullets = optional deck of speaking cards for a Cue Cards section (see CUE CARDS SECTION below).",
     "  • Past 4 Sundays = the last four outlines that were actually used, newest first. This is the source of continuity: where the group left off, normal timing, recurring wording, and the leader's teaching style.",
     "",
     "READ BEFORE PLANNING (for an assistant, human or AI)",
@@ -124,6 +127,10 @@ function readmeRows(planDate: string): string[][] {
     "Only after the leader has approved the lesson content. Use this same workbook, same sheet names, same columns, no new sheets, no merged cells or formatting tricks. Update the Plan sheet and the Bible Reading, Devotional, and Discussion rows. Leave recurring sections as they are unless instructed. Leave Memory verse blank if there is none. Make the section minutes add up to the slot length on the Plan sheet. Delete any example rows. Return as .xlsx.",
     "Before returning, check: 1) passage is correct  2) full passage text is in Bible Reading Script  3) Devotional Notes match the approved devotional  4) Devotional Script is plain paragraphs with inline verse markers, no speaker labels or bullets  5) Discussion instructions begin with 'What stood out to you in that?'  6) Say / Mean / Do questions are backups, not the main method  7) recurring sections preserved  8) no unapproved teaching content, and every teaching point, application, analogy, and conclusion traces to something the leader said or approved  9) timing totals correctly  10) structure and sheet names preserved. Then list what changed from the current draft and confirm each item was approved.",
     "",
+    "CUE CARDS SECTION (optional)",
+    "A Cue Cards section means the leader will preach from a deck of swipeable phone cards instead of (or as well as) the Devotional glance Notes. If the Sections sheet has a Cue Cards row, fill the Cue Cards and Card Bullets sheets; upload creates the deck and links it to that section. If there is no Cue Cards section, leave those two sheets alone (example rows are ignored).",
+    ...cueCardInstructionRows(),
+    "",
     "VALUES THE APP ACCEPTS (full lists on the Reference sheet)",
     "  • Type must be one of: " + Object.values(SECTION_LABEL).join(", ") + ".",
     "  • Game is only used when Type is 'Group Game'. Use the game name from the Reference sheet, or 'Pick during group'.",
@@ -139,7 +146,7 @@ function readmeRows(planDate: string): string[][] {
 // ---------------------------------------------------------------------------
 // Build the workbook bytes.
 // ---------------------------------------------------------------------------
-export async function buildTemplate(it: Itinerary, sections: Section[], past: PastOutline[]): Promise<ArrayBuffer> {
+export async function buildTemplate(it: Itinerary, sections: Section[], past: PastOutline[], deckCards: CueCard[] = []): Promise<ArrayBuffer> {
   const XLSX = await import("xlsx");
   const wb = XLSX.utils.book_new();
 
@@ -178,6 +185,9 @@ export async function buildTemplate(it: Itinerary, sections: Section[], past: Pa
   secs["!cols"] = [{ wch: 6 }, { wch: 18 }, { wch: 24 }, { wch: 8 }, { wch: 22 }, { wch: 50 }, { wch: 60 }, { wch: 60 }, { wch: 40 }];
   XLSX.utils.book_append_sheet(wb, secs, SHEET_SECTIONS);
 
+  // Cue cards: the linked deck if there is one, else example rows.
+  appendCueCardSheets(XLSX, wb, deckCards);
+
   // Reference
   const ref: (string | null)[][] = [["SECTION TYPES (use the exact name in the Type column)", "When to use it"]];
   const typeHelp: Record<SectionType, string> = {
@@ -187,6 +197,7 @@ export async function buildTemplate(it: Itinerary, sections: Section[], past: Pa
     memory_verse_check: "Students recite the verse for a team point. Uses the app's check-off screen.",
     bible_reading: "Students read the passage aloud. The full passage text goes in Script. No teaching here.",
     devotional: "The leader teaches. Notes = glance-down bullets with verse markers; Script = the full read-aloud version in plain paragraphs (not script format).",
+    cue_cards: "The leader preaches from a deck of swipeable phone cards. Fill the Cue Cards and Card Bullets sheets; upload links the deck to this section.",
     discussion: "Open with 'What stood out to you in that?' Say / Mean / Do questions are the backup.",
     prayer: "Requests and closing prayer.",
     group_game: "A game from the list below. Set the Game column.",
@@ -207,6 +218,7 @@ export async function buildTemplate(it: Itinerary, sections: Section[], past: Pa
   ref.push(["Script", "Exact words to say, in quotes. Bible Reading: the full passage text goes here too."]);
   ref.push(["Discussion questions", "Say / Mean / Do questions with expected answers in [brackets]."]);
   ref.push(["Notes", "Leader-only reminders."]);
+  for (const r of cueCardReferenceRows()) ref.push(r);
   const refSheet = XLSX.utils.aoa_to_sheet(ref);
   refSheet["!cols"] = [{ wch: 44 }, { wch: 110 }];
   XLSX.utils.book_append_sheet(wb, refSheet, SHEET_REFERENCE);
@@ -241,7 +253,7 @@ export async function buildTemplate(it: Itinerary, sections: Section[], past: Pa
 function exampleSections(): Section[] {
   const mk = (section_type: SectionType, title: string, duration_minutes: number, extra: Partial<Section> = {}): Section => ({
     id: "", itinerary_id: "", position: 0, title, section_type, start_time: null, duration_minutes,
-    instructions: null, script: null, discussion_questions: null, notes: null, completed: false, chosen_game: null, completed_at: null, ...extra,
+    instructions: null, script: null, discussion_questions: null, notes: null, completed: false, chosen_game: null, cue_deck_id: null, completed_at: null, ...extra,
   });
   return [
     mk("free_hangout", "Free Hangout", 15, { instructions: "EXAMPLE ROW — replace. Welcome students as they arrive." }),
@@ -280,6 +292,7 @@ function typeFromCell(v: unknown): SectionType | null {
     "verse check": "memory_verse_check", "memory verse recite": "memory_verse_check",
     reading: "bible_reading", "bible study": "bible_reading", passage: "bible_reading",
     game: "group_game", games: "group_game",
+    "cue cards": "cue_cards", "cue card": "cue_cards", cards: "cue_cards", deck: "cue_cards",
     scores: "score_recording", "score": "score_recording", summary: "score_recording",
     other: "custom", announcement: "custom", announcements: "custom",
   };
@@ -305,7 +318,7 @@ export async function parseTemplate(buf: ArrayBuffer): Promise<ParsedPlan> {
   const XLSX = await import("xlsx");
   const errors: string[] = [];
   const warnings: string[] = [];
-  const out: ParsedPlan = { itinerary: {}, sections: [], errors, warnings };
+  const out: ParsedPlan = { itinerary: {}, sections: [], errors, warnings, deck: null };
 
   let wb;
   try { wb = XLSX.read(buf, { type: "array" }); }
@@ -392,5 +405,12 @@ export async function parseTemplate(buf: ArrayBuffer): Promise<ParsedPlan> {
   parsed.sort((a, b) => a.order - b.order);
   out.sections = parsed.map(({ order: _o, ...s }) => s);
   if (out.sections.length === 0 && errors.length === 0) errors.push("No sections found on the Sections sheet.");
+
+  // Optional cue card sheets. Their errors block the import like any other.
+  out.deck = parseCueCardSheets(XLSX, wb);
+  if (out.deck) {
+    for (const m of out.deck.errors) errors.push(`Cue cards: ${m}`);
+    for (const m of out.deck.warnings) warnings.push(`Cue cards: ${m}`);
+  }
   return out;
 }

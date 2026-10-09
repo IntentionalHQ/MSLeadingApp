@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import type { Itinerary, Section } from "@/lib/types";
+import type { CueCard, Itinerary, Section } from "@/lib/types";
 import { SECTION_ICON } from "@/lib/types";
 import { buildTemplate, parseTemplate, type ParsedPlan, type PastOutline } from "@/lib/planXlsx";
 
@@ -10,11 +10,12 @@ import { buildTemplate, parseTemplate, type ParsedPlan, type PastOutline } from 
 // the browser and replace this Sunday's outline.
 // The uploaded file is never sent or stored anywhere.
 export default function PlanFileMenu({
-  itinerary, sections, loadPast, onApply,
+  itinerary, sections, loadPast, loadDeckCards, onApply,
 }: {
   itinerary: Itinerary;
   sections: Section[];
   loadPast: () => Promise<PastOutline[]>;
+  loadDeckCards: () => Promise<CueCard[]>;
   onApply: (plan: ParsedPlan) => Promise<void>;
 }) {
   const [open, setOpen] = useState(false);
@@ -39,8 +40,8 @@ export default function PlanFileMenu({
     setErr(null);
     setBusy("download");
     try {
-      const past = await loadPast();
-      const bytes = await buildTemplate(itinerary, sections, past);
+      const [past, deckCards] = await Promise.all([loadPast(), loadDeckCards()]);
+      const bytes = await buildTemplate(itinerary, sections, past, deckCards);
       const blob = new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -162,6 +163,17 @@ export default function PlanFileMenu({
                     ))}
                   </ol>
                 </div>
+                {preview.deck && preview.deck.cards.length > 0 && (
+                  <div className="card p-3">
+                    <div className="text-xs text-[#9fb0d3] mb-1">🃏 {preview.deck.cards.length} cue card{preview.deck.cards.length === 1 ? "" : "s"}</div>
+                    <ol className="text-sm space-y-0.5">
+                      {preview.deck.cards.map((c, i) => <li key={i} className="truncate">{i + 1}. {c.title || "Untitled card"}</li>)}
+                    </ol>
+                    {!preview.sections.some((s) => s.section_type === "cue_cards") && (
+                      <div className="text-xs text-amber-400 mt-1">No Cue Cards section in this plan: the deck will be created on the Cards tab but not linked.</div>
+                    )}
+                  </div>
+                )}
                 <p className="text-xs text-[#9fb0d3]">
                   This replaces all {sections.length} current section{sections.length === 1 ? "" : "s"} on this Sunday. Fields left blank in the file keep their current value.
                 </p>

@@ -95,7 +95,7 @@ function NewSundayInner() {
         await supabase.from("itinerary_sections").insert(srcSections.map((s: any) => ({
           itinerary_id: newIt.id, position: s.position, title: s.title, section_type: s.section_type,
           duration_minutes: s.duration_minutes, instructions: s.instructions, script: s.script,
-          discussion_questions: s.discussion_questions, notes: s.notes, chosen_game: s.chosen_game,
+          discussion_questions: s.discussion_questions, notes: s.notes, chosen_game: s.chosen_game, cue_deck_id: s.cue_deck_id,
           completed: false, completed_at: null,
         })));
       }
