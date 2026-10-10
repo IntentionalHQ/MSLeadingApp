@@ -250,12 +250,20 @@ export default function LeaderModePage() {
             )}
             {current.section_type === "cue_cards" && (
               current.cue_deck_id ? (
+                <>
                 <Link
                   href={`/cards/${current.cue_deck_id}/present?back=${encodeURIComponent(`/itineraries/${id}/lead`)}&since=${sectionStartMs}&plan=${current.duration_minutes ?? 0}`}
                   className="btn btn-primary btn-lg"
                 >
                   🃏 Present cards
                 </Link>
+                <Link
+                  href={`/cards/${current.cue_deck_id}/present?view=outline&back=${encodeURIComponent(`/itineraries/${id}/lead`)}&since=${sectionStartMs}&plan=${current.duration_minutes ?? 0}`}
+                  className="btn btn-ghost"
+                >
+                  📄 Review outline
+                </Link>
+                </>
               ) : (
                 <Link href={`/itineraries/${id}/edit`} className="btn btn-ghost btn-lg">🃏 No deck linked · pick one in the outline</Link>
               )

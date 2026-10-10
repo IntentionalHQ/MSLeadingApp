@@ -4,9 +4,9 @@ import { useParams, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { CueCard, CueDeck } from "@/lib/types";
 import { normalizeCard } from "@/lib/cueCards";
-import CardPresenter from "@/components/cards/CardPresenter";
+import CardPresenter, { type PresenterMode } from "@/components/cards/CardPresenter";
 
-// /cards/[id]/present?back=<href>&since=<epoch ms>&plan=<minutes>
+// /cards/[id]/present?back=<href>&since=<epoch ms>&plan=<minutes>&view=outline
 // `back` is where ✕ / Escape returns to (Lead mode passes itself). `since` and
 // `plan` come from Lead mode so the clock here matches the section timer there.
 function PresentInner() {
@@ -31,11 +31,12 @@ function PresentInner() {
   const since = sinceRaw && !Number.isNaN(Number(sinceRaw)) ? Number(sinceRaw) : null;
   const planRaw = params.get("plan");
   const plan = planRaw && !Number.isNaN(Number(planRaw)) ? Number(planRaw) : null;
+  const view: PresenterMode = params.get("view") === "outline" ? "outline" : "cards";
 
   if (!deck || !cards) {
     return <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b1220] text-[#9fb0d3]">Loading cards…</div>;
   }
-  return <CardPresenter deck={deck} cards={cards} backHref={back} since={since} planMinutes={plan} />;
+  return <CardPresenter deck={deck} cards={cards} backHref={back} since={since} planMinutes={plan} initialMode={view} />;
 }
 
 export default function PresentPage() {

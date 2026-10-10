@@ -165,6 +165,7 @@ export default function DeckEditorPage() {
           <div className="flex flex-wrap items-center gap-2">
             <SaveIndicator state={state} />
             <DeckFileMenu deck={deck} cards={cards} onApply={applyImport} />
+            <Link href={`/cards/${id}/present?view=outline`} className={"btn btn-ghost" + (cards.length === 0 ? " pointer-events-none opacity-40" : "")} title="Read the whole deck top to bottom">📄 Review</Link>
             <Link href={`/cards/${id}/present`} className={"btn btn-primary" + (cards.length === 0 ? " pointer-events-none opacity-40" : "")}>▶ Present</Link>
             <Confirm label="🗑" title="Delete deck" confirmLabel="Delete deck" onConfirm={deleteDeck} />
           </div>
