@@ -67,9 +67,10 @@ export default function BulletEditor({ bullets, onChange }: { bullets: CueBullet
                   if (e.key === "Backspace" && !(e.target as HTMLInputElement).value && bullets.length > 1) { e.preventDefault(); remove(b.id); }
                 }}
               />
-              <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="shrink-0 text-[#9fb0d3] px-1 disabled:opacity-30" aria-label="Move up">↑</button>
-              <button type="button" onClick={() => move(i, 1)} disabled={i === bullets.length - 1} className="shrink-0 text-[#9fb0d3] px-1 disabled:opacity-30" aria-label="Move down">↓</button>
-              <button type="button" onClick={() => remove(b.id)} className="shrink-0 text-[#9fb0d3] hover:text-red-400 px-1" aria-label="Delete bullet">✕</button>
+              {/* Phones: the text box gets the whole row; move/delete live in the toolbar below. */}
+              <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="hidden sm:inline-flex shrink-0 text-[#9fb0d3] px-1 disabled:opacity-30" aria-label="Move up">↑</button>
+              <button type="button" onClick={() => move(i, 1)} disabled={i === bullets.length - 1} className="hidden sm:inline-flex shrink-0 text-[#9fb0d3] px-1 disabled:opacity-30" aria-label="Move down">↓</button>
+              <button type="button" onClick={() => remove(b.id)} className="hidden sm:inline-flex shrink-0 text-[#9fb0d3] hover:text-red-400 px-1" aria-label="Delete bullet">✕</button>
             </div>
 
             {open === b.id && (
@@ -105,6 +106,11 @@ export default function BulletEditor({ bullets, onChange }: { bullets: CueBullet
                       aria-pressed={b.color === c.id}
                     >{!c.id && <span className="text-xs text-[#9fb0d3]">–</span>}</button>
                   ))}
+                </div>
+                <div className="flex gap-2 sm:hidden">
+                  <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="btn btn-ghost !min-h-[36px] !py-1 text-sm flex-1" aria-label="Move up">↑ Up</button>
+                  <button type="button" onClick={() => move(i, 1)} disabled={i === bullets.length - 1} className="btn btn-ghost !min-h-[36px] !py-1 text-sm flex-1" aria-label="Move down">↓ Down</button>
+                  <button type="button" onClick={() => remove(b.id)} className="btn btn-ghost !min-h-[36px] !py-1 text-sm flex-1 text-red-400" aria-label="Delete bullet">✕ Delete</button>
                 </div>
               </div>
             )}
