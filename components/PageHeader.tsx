@@ -10,7 +10,7 @@ export default function PageHeader({
   right?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 mb-1">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3 mb-1">
       <div className="min-w-0">
         {backHref && (
           <Link href={backHref} className="inline-flex items-center gap-1 text-sm text-[#9fb0d3] hover:text-[#e6ecf5] mb-1">
@@ -20,7 +20,7 @@ export default function PageHeader({
         <h1 className="truncate">{title}</h1>
         {subtitle && <div className="text-xs text-[#9fb0d3] mt-0.5">{subtitle}</div>}
       </div>
-      {right && <div className="flex flex-wrap gap-2 justify-end shrink-0">{right}</div>}
+      {right && <div className="flex flex-wrap gap-2 sm:justify-end sm:shrink-0">{right}</div>}
     </div>
   );
 }

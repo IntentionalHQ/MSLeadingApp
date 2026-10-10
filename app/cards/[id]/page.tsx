@@ -162,7 +162,7 @@ export default function DeckEditorPage() {
         backHref="/cards"
         backLabel="Cards"
         right={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <SaveIndicator state={state} />
             <DeckFileMenu deck={deck} cards={cards} onApply={applyImport} />
             <Link href={`/cards/${id}/present`} className={"btn btn-primary" + (cards.length === 0 ? " pointer-events-none opacity-40" : "")}>▶ Present</Link>

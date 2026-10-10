@@ -365,7 +365,7 @@ export default function EditItineraryPage() {
         backHref="/itineraries"
         backLabel="Sundays"
         right={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <SaveIndicator state={state} />
             <button
               type="button"
