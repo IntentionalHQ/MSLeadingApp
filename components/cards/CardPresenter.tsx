@@ -34,6 +34,9 @@ export default function CardPresenter({
   const scroller = useRef<HTMLDivElement | null>(null);
   const [mode, setMode] = useState<PresenterMode>(initialMode);
   const [editing, setEditing] = useState<string | null>(null); // dry run: card id open in the quick editor
+  const [mapOpen, setMapOpen] = useState(false);               // the tap-the-bar outline of the whole deck
+  const mapOpenRef = useRef(false);
+  mapOpenRef.current = mapOpen;
   const editingRef = useRef<string | null>(null);
   editingRef.current = editing;
   const [idx, setIdx] = useState(0);
@@ -96,6 +99,7 @@ export default function CardPresenter({
     const onKey = (e: KeyboardEvent) => {
       // While the quick editor is open, keys belong to it (Escape just closes it).
       if (editingRef.current) { if (e.key === "Escape") setEditing(null); return; }
+      if (mapOpenRef.current) { if (e.key === "Escape") setMapOpen(false); return; }
       if (e.key === "Escape") { router.push(backHref); return; }
       if (!stepping) return;
       if (["ArrowDown", "ArrowRight", "PageDown", " "].includes(e.key)) { e.preventDefault(); goTo(idxRef.current + 1); }
@@ -287,7 +291,14 @@ export default function CardPresenter({
       <div className="pointer-events-none absolute inset-x-0 top-0">
         {/* Progress as one segment per card, tinted with the card's section colour
             (neutral when none), passed cards filled and the current one lit. */}
-        <div className="flex h-1 gap-px bg-[#0b1220]">
+        <button
+          type="button"
+          onClick={() => setMapOpen(true)}
+          className="pointer-events-auto flex h-1 w-full gap-px bg-[#0b1220]"
+          style={{ boxSizing: "content-box", paddingBottom: 14, marginBottom: -14 }} // a finger-sized hit area below the 4px bar
+          aria-label="Show the deck outline"
+          title="Outline of the whole deck"
+        >
           {cards.map((c, i) => {
             const tint = colorSolid(c.color) ?? "#3b82f6";
             const state = outline ? "off" : i < idx ? "done" : i === idx ? "now" : "off";
@@ -299,7 +310,7 @@ export default function CardPresenter({
               }} />
             );
           })}
-        </div>
+        </button>
         <div className="mx-auto flex max-w-2xl items-center justify-between gap-2 px-3 pt-2 text-sm">
           <div className="flex items-center gap-1.5">
             <button type="button" onClick={() => router.push(backHref)} className="pointer-events-auto btn btn-ghost !min-h-0 !px-3 !py-1.5 text-sm" aria-label="Exit presentation">✕</button>
@@ -313,10 +324,10 @@ export default function CardPresenter({
               {outline ? "🃏 Cards" : "☰ Outline"}
             </button>
           </div>
-          <div className="font-mono tabular-nums text-[#9fb0d3] truncate">
+          <button type="button" onClick={() => setMapOpen(true)} className="pointer-events-auto font-mono tabular-nums text-[#9fb0d3] truncate" title="Outline of the whole deck">
             {rehearse && <span className="mr-1.5 rounded bg-amber-900/50 px-1 text-[10px] font-semibold uppercase tracking-widest text-amber-300">Dry run</span>}
             {n ? (outline ? "Outline" : `Card ${idx + 1} of ${n}`) : ""}
-          </div>
+          </button>
           <Clocks since={since} goalMinutes={goalMinutes} paused={editing !== null} />
         </div>
         {/* Where you are and what's next, by section colour. Only when the current card has one. */}
@@ -344,6 +355,50 @@ export default function CardPresenter({
           );
         })()}
       </div>
+
+      {/* Tap the bar: the deck's outline, titles only, grouped by section. Tap off it to close,
+          tap a title to jump there. */}
+      {mapOpen && (
+        <div className="absolute inset-0 z-[55] flex items-end bg-black/70 sm:items-center sm:justify-center" onClick={() => setMapOpen(false)}>
+          <div
+            className="w-full max-h-[80%] overflow-y-auto overscroll-y-contain rounded-t-2xl border border-[#1f2a44] bg-[#121a2b] p-3 pb-6 shadow-2xl sm:max-w-md sm:rounded-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-2 flex items-center justify-between">
+              <div className="text-xs font-semibold uppercase tracking-widest text-[#9fb0d3]">{deck.title}</div>
+              <button type="button" className="btn btn-ghost !min-h-0 !px-2.5 !py-1 text-xs" onClick={() => setMapOpen(false)}>Close</button>
+            </div>
+            <ol className="space-y-0.5">
+              {cards.map((c, i) => {
+                const names = deck.section_names ?? {};
+                const startsSection = c.color && (i === 0 || cards[i - 1].color !== c.color);
+                const sectionName = names[c.color] || CUE_COLORS.find((x) => x.id === c.color)?.label || "";
+                const current = i === idx;
+                return (
+                  <li key={c.id}>
+                    {startsSection && (
+                      <div className={"flex items-center gap-1.5 px-2 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-[#9fb0d3] " + (i === 0 ? "" : "pt-2")}>
+                        <span className="h-2 w-2 rounded-full" style={{ background: colorSolid(c.color)! }} aria-hidden />
+                        {sectionName}
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => { setMapOpen(false); goTo(i, false); }}
+                      className={"flex w-full items-baseline gap-2 rounded-lg px-2 py-1.5 text-left text-sm " + (current ? "bg-[#1f2a44] font-semibold text-[#e6ecf5]" : "text-[#e6ecf5]/85 hover:bg-[#172138]")}
+                      style={colorSolid(c.color) ? { borderLeft: `3px solid ${colorSolid(c.color)}` } : { borderLeft: "3px solid transparent" }}
+                    >
+                      <span className="w-5 shrink-0 font-mono text-xs text-[#9fb0d3]">{i + 1}</span>
+                      <span className="min-w-0 flex-1">{c.title || "Untitled card"}</span>
+                      {current && <span className="shrink-0 text-[10px] font-semibold uppercase tracking-widest text-blue-300">Now</span>}
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        </div>
+      )}
 
       {/* Dry run quick editor, over everything; the clock is paused while it's open. */}
       {editing && onSaveCard && (() => {
