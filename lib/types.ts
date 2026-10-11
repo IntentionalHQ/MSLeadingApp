@@ -184,6 +184,7 @@ export type CueDeck = {
   subtitle: string | null;
   created_at: string;
   updated_at: string;
+  notes: string | null;      // about the whole message; editor Notes tab only
   deleted_at: string | null; // in the trash when set; see lib/trash.ts
 };
 
@@ -196,4 +197,5 @@ export type CueCard = {
   bullets: CueBullet[];
   key_line: string | null;
   transition: string | null;
+  notes: string | null;      // in-depth notes for this card; editor Notes tab only, never presented
 };

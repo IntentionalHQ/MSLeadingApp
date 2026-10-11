@@ -26,6 +26,7 @@ export default function DeckEditorPage() {
   const [deck, setDeck] = useState<CueDeck | null>(null);
   const [cards, setCards] = useState<CueCard[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [tab, setTab] = useState<"cards" | "notes">("cards"); // Notes = in-depth context, never presented
   const [dragging, setDragging] = useState<{ id: string; overIndex: number } | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
   const rectsRef = useRef<DOMRect[]>([]);
@@ -195,6 +196,13 @@ export default function DeckEditorPage() {
         </div>
       </div>
 
+      {/* Cards | Notes */}
+      <div className="flex gap-2" role="tablist">
+        <button type="button" role="tab" aria-selected={tab === "cards"} onClick={() => setTab("cards")} className={"btn flex-1 " + (tab === "cards" ? "btn-primary" : "btn-ghost")}>🃏 Cue Cards</button>
+        <button type="button" role="tab" aria-selected={tab === "notes"} onClick={() => setTab("notes")} className={"btn flex-1 " + (tab === "notes" ? "btn-primary" : "btn-ghost")}>📝 Notes</button>
+      </div>
+
+      {tab === "cards" && (<>
       {/* Cards */}
       {cards.length > 0 && <div className="text-xs text-[#9fb0d3] -mb-1">Tap a card to edit it. Drag ⠿ to reorder.</div>}
       <div ref={listRef} className="space-y-2">
@@ -274,6 +282,30 @@ export default function DeckEditorPage() {
       </div>
 
       <button type="button" onClick={addCard} className="btn btn-ghost w-full btn-lg">+ Add card</button>
+      </>)}
+
+      {/* Notes: the full context of the message, card by card, for coming back to it later. Never shown in the presenter. */}
+      {tab === "notes" && (
+        <div className="space-y-3">
+          <div className="card p-4 space-y-2">
+            <label>About this message</label>
+            <AutoTextarea rows={4} defaultValue={deck.notes ?? ""} placeholder="What this message was about, who it was for, what you hoped would land. Anything future-you needs to pick it back up."
+              onBlur={(e) => { if ((e.target.value || null) !== deck.notes) patchDeck({ notes: e.target.value || null }); }} />
+          </div>
+          {cards.length === 0 && <div className="card p-4 text-sm text-[#9fb0d3]">Add cards on the Cue Cards tab; each one gets its own notes section here.</div>}
+          {cards.map((c, i) => (
+            <div key={c.id} className="card p-4 space-y-2">
+              <div className="flex items-baseline gap-2 min-w-0">
+                <span className="text-[#9fb0d3] text-xs font-mono shrink-0">{i + 1}/{cards.length}</span>
+                <span className="font-semibold truncate">{c.title || <span className="text-[#9fb0d3] font-normal">Untitled card</span>}</span>
+                {c.scripture_ref && <span className="text-xs text-[#9fb0d3] shrink-0">{c.scripture_ref}</span>}
+              </div>
+              <AutoTextarea rows={5} defaultValue={c.notes ?? ""} placeholder="The full context of this card: the point, the illustration in full, where it landed, what you would change next time."
+                onBlur={(e) => { if ((e.target.value || null) !== c.notes) patchCard(c.id, { notes: e.target.value || null }); }} />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

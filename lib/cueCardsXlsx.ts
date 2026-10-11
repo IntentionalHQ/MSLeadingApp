@@ -10,8 +10,8 @@ import type { CueBullet, CueCard, CueDeck } from "./types";
 import { CUE_COLORS, CUE_SYMBOLS, colorFromCell, colorToCell, newId, symbolsFromCell, symbolsToCell } from "./cueCards";
 
 export type ParsedDeck = {
-  deck: Partial<Pick<CueDeck, "title" | "passage" | "subtitle">>;
-  cards: Array<Pick<CueCard, "title" | "scripture_ref" | "bullets" | "key_line" | "transition">>;
+  deck: Partial<Pick<CueDeck, "title" | "passage" | "subtitle" | "notes">>;
+  cards: Array<Pick<CueCard, "title" | "scripture_ref" | "bullets" | "key_line" | "transition" | "notes">>;
   errors: string[];
   warnings: string[];
 };
@@ -26,9 +26,10 @@ const DECK_KEYS = [
   ["Deck title", "title"],
   ["Passage", "passage"],
   ["Subtitle (e.g. Youth Group Message · 15-20 min)", "subtitle"],
+  ["Notes (about this message; editor only)", "notes"],
 ] as const;
 
-export const CARD_HEADERS = ["Order", "Card title", "Scripture", "Key line", "Transition"] as const;
+export const CARD_HEADERS = ["Order", "Card title", "Scripture", "Key line", "Transition", "Notes"] as const;
 export const BULLET_HEADERS = ["Card", "Order", "Bullet", "Symbol", "Highlight"] as const;
 
 type XLSXModule = typeof import("xlsx");
@@ -49,6 +50,7 @@ export function cueCardInstructionRows(): string[] {
     "      Scripture: the passage for this card, e.g. 'Mark 5:21-29'. Optional.",
     "      Key line: ONE memorable sentence the leader wants to land, in their words.",
     "      Transition: one short sentence that leads into the next card. On the last card this is the closing line.",
+    "      Notes: optional, as long as needed. The full context of this card for the leader coming back to the message later: what the point was, the illustration in full, where it landed. Shown only on the deck editor Notes tab, never while presenting. Not a script.",
     "  • Card Bullets sheet = one row per memory trigger, 3-5 per card.",
     "      Card: the Order number of the card this bullet belongs to.",
     "      Order: 1, 2, 3 ... within that card.",
@@ -70,11 +72,11 @@ export function appendCueCardSheets(XLSX: XLSXModule, wb: any, cards: CueCard[])
   const bulletRows: (string | number)[][] = [[...BULLET_HEADERS]];
   const src = cards.length ? cards : exampleCards();
   src.forEach((c, i) => {
-    cardRows.push([i + 1, c.title, c.scripture_ref ?? "", c.key_line ?? "", c.transition ?? ""]);
+    cardRows.push([i + 1, c.title, c.scripture_ref ?? "", c.key_line ?? "", c.transition ?? "", c.notes ?? ""]);
     c.bullets.forEach((b, j) => bulletRows.push([i + 1, j + 1, b.text, symbolsToCell(b.symbols), colorToCell(b.color)]));
   });
   const cs = XLSX.utils.aoa_to_sheet(cardRows);
-  cs["!cols"] = [{ wch: 6 }, { wch: 60 }, { wch: 16 }, { wch: 60 }, { wch: 70 }];
+  cs["!cols"] = [{ wch: 6 }, { wch: 60 }, { wch: 16 }, { wch: 60 }, { wch: 70 }, { wch: 80 }];
   XLSX.utils.book_append_sheet(wb, cs, SHEET_CARDS);
   const bs = XLSX.utils.aoa_to_sheet(bulletRows);
   bs["!cols"] = [{ wch: 6 }, { wch: 6 }, { wch: 70 }, { wch: 18 }, { wch: 10 }];
@@ -147,6 +149,7 @@ function exampleCards(): CueCard[] {
     ],
     key_line: "Two completely different lives. The same desperate need for Jesus.",
     transition: "She reaches out, touches his robe, and is healed. But what Jesus calls her next might be even more powerful.",
+    notes: null,
   }];
 }
 
@@ -185,7 +188,7 @@ export function parseCueCardSheets(XLSX: XLSXModule, wb: any): ParsedDeck | null
   if (hi === -1) { errors.push(`The '${SHEET_CARDS}' sheet is missing its header row (Order, Card title, ...).`); return out; }
   const header = rows[hi].map(norm);
   const col = (name: string) => header.indexOf(norm(name));
-  const cOrder = col("Order"), cTitle = col("Card title"), cRef = col("Scripture"), cKey = col("Key line"), cTrans = col("Transition");
+  const cOrder = col("Order"), cTitle = col("Card title"), cRef = col("Scripture"), cKey = col("Key line"), cTrans = col("Transition"), cNotes = col("Notes");
   if (cTitle === -1) { errors.push("Cue Cards header must include 'Card title'."); return out; }
 
   type Row = ParsedDeck["cards"][number] & { order: number };
@@ -202,6 +205,7 @@ export function parseCueCardSheets(XLSX: XLSXModule, wb: any): ParsedDeck | null
       bullets: [],
       key_line: cellText(cKey >= 0 ? r[cKey] : null),
       transition: cellText(cTrans >= 0 ? r[cTrans] : null),
+      notes: cellText(cNotes >= 0 ? r[cNotes] : null),
     });
   });
   cards.sort((a, b) => a.order - b.order);
