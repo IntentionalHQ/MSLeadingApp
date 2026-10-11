@@ -39,6 +39,7 @@ export type Itinerary = {
   slot_minutes: number | null;
   led_at: string | null;
   status: PlanStatus | null;
+  deleted_at: string | null; // in the trash when set; see lib/trash.ts
 };
 
 export type Section = {
@@ -183,6 +184,7 @@ export type CueDeck = {
   subtitle: string | null;
   created_at: string;
   updated_at: string;
+  deleted_at: string | null; // in the trash when set; see lib/trash.ts
 };
 
 export type CueCard = {

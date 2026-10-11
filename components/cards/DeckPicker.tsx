@@ -17,7 +17,7 @@ export default function DeckPicker({
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    supabase.from("cue_decks").select("*").order("updated_at", { ascending: false })
+    supabase.from("cue_decks").select("*").is("deleted_at", null).order("updated_at", { ascending: false })
       .then(({ data }) => setDecks((data ?? []) as CueDeck[]));
   }, []);
 

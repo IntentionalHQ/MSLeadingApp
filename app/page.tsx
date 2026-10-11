@@ -30,12 +30,14 @@ export default function Home() {
           .select("*")
           .gte("scheduled_date", today)
           .eq("is_template", false)
+          .is("deleted_at", null)
           .order("scheduled_date")
           .limit(12),
         supabase
           .from("itineraries")
           .select("*")
           .eq("is_template", false)
+          .is("deleted_at", null)
           .lt("scheduled_date", today)
           .order("scheduled_date", { ascending: false })
           .limit(5),

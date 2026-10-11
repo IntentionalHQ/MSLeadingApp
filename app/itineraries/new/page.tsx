@@ -39,8 +39,8 @@ function NewSundayInner() {
 
   useEffect(() => {
     (async () => {
-      const { data: t } = await supabase.from("itineraries").select("*").eq("is_template", true).order("created_at");
-      const { data: p } = await supabase.from("itineraries").select("*").eq("is_template", false)
+      const { data: t } = await supabase.from("itineraries").select("*").eq("is_template", true).is("deleted_at", null).order("created_at");
+      const { data: p } = await supabase.from("itineraries").select("*").eq("is_template", false).is("deleted_at", null)
         .order("scheduled_date", { ascending: false, nullsFirst: false }).limit(10);
       const templates = (t ?? []) as Itinerary[];
       const past = (p ?? []) as Itinerary[];

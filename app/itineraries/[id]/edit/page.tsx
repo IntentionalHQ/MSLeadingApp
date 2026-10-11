@@ -19,6 +19,7 @@ import SaveIndicator from "@/components/outline/SaveIndicator";
 import { useSaveState } from "@/components/outline/useBlurSave";
 import PlanFileMenu from "@/components/outline/PlanFileMenu";
 import type { ParsedPlan, PastOutline } from "@/lib/planXlsx";
+import { trashRow } from "@/lib/trash";
 import { todayLocal } from "@/lib/dates";
 
 export default function EditItineraryPage() {
@@ -215,7 +216,7 @@ export default function EditItineraryPage() {
   const loadPast = async (): Promise<PastOutline[]> => {
     const before = it?.scheduled_date ?? todayLocal();
     const { data: its } = await supabase.from("itineraries").select("*")
-      .eq("is_template", false).neq("id", id).lt("scheduled_date", before)
+      .eq("is_template", false).is("deleted_at", null).neq("id", id).lt("scheduled_date", before)
       .order("scheduled_date", { ascending: false }).limit(4);
     const list = (its ?? []) as Itinerary[];
     if (!list.length) return [];
@@ -300,9 +301,9 @@ export default function EditItineraryPage() {
     })());
   };
 
+  // Into the trash (restore from the Sundays list for 30 days); sections stay with it.
   const deleteSunday = async () => {
-    await supabase.from("itinerary_sections").delete().eq("itinerary_id", id);
-    await supabase.from("itineraries").delete().eq("id", id);
+    await trashRow("itineraries", id);
     router.push("/itineraries");
   };
 
