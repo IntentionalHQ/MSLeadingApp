@@ -316,7 +316,7 @@ export default function DeckEditorPage() {
                       <BulletEditor bullets={c.bullets} onChange={(bullets: CueBullet[]) => patchCard(c.id, { bullets })} />
                     </div>
                     <div>
-                      <label>Key line</label>
+                      <label>Last point</label>
                       <AutoTextarea rows={2} defaultValue={c.key_line ?? ""} placeholder="Two completely different lives. The same desperate need for Jesus."
                         onBlur={(e) => { if ((e.target.value || null) !== c.key_line) patchCard(c.id, { key_line: e.target.value || null }); }} />
                     </div>

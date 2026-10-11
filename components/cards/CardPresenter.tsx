@@ -178,11 +178,11 @@ export default function CardPresenter({
               </ul>
 
               {/* The three closing blocks are colour-coded so the eye finds them at a glance:
-                  blue = key line (land this), purple = transition (walk into the next card),
+                  blue = last point (the last thing to say on this card), purple = transition (walk into the next card),
                   green = up next (where you're walking to; read live from the deck order). */}
               {c.key_line && (
                 <div className="mt-3 border-l-4 border-blue-500 pl-3">
-                  <div className="text-[10px] font-semibold uppercase tracking-widest text-blue-400">Key line</div>
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-blue-400">Last point</div>
                   <div className="italic leading-snug" style={{ fontSize: outline ? "17px" : "clamp(17px, 4.6vw, 23px)" }}>&ldquo;{c.key_line}&rdquo;</div>
                 </div>
               )}

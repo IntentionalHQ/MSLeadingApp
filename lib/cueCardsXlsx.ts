@@ -30,7 +30,7 @@ const DECK_KEYS = [
   ["Notes (about this message; editor only)", "notes"],
 ] as const;
 
-export const CARD_HEADERS = ["Order", "Card title", "Scripture", "Key line", "Transition", "Notes", "Color"] as const;
+export const CARD_HEADERS = ["Order", "Card title", "Scripture", "Last point", "Transition", "Notes", "Color"] as const;
 export const BULLET_HEADERS = ["Card", "Order", "Bullet", "Symbol", "Highlight"] as const;
 
 type XLSXModule = typeof import("xlsx");
@@ -49,7 +49,7 @@ export function cueCardInstructionRows(): string[] {
     "      Order: 1, 2, 3 ...",
     "      Card title: a conversational headline that tells the leader what this section is about in one glance. Not a topic label. E.g. 'Jairus Had Everything. The Woman Had Nothing. Both Needed Jesus.'",
     "      Scripture: the passage for this card, e.g. 'Mark 5:21-29'. Optional.",
-    "      Key line: ONE memorable sentence the leader wants to land, in their words.",
+    "      Last point: the last thing to say on this card before the transition. ONE memorable sentence the leader wants to land, in their words.",
     "      Transition: one short sentence that leads into the next card. On the last card this is the closing line.",
     "      Notes: optional, as long as needed. The full context of this card for the leader coming back to the message later: what the point was, the illustration in full, where it landed. Shown only on the deck editor Notes tab, never while presenting. Not a script.",
     "      Color: optional. One of: " + CUE_COLORS.filter((c) => c.id).map((c) => c.label).join(", ") + ". Give the cards of one section of the message the same colour so they read as a group. Blank = none.",
@@ -111,12 +111,12 @@ export async function buildDeckTemplate(deck: CueDeck, cards: CueCard[]): Promis
     "",
     "This workbook holds one cue card deck for MS Leading. Fill it in (yourself, or hand it to an AI assistant along with the approved devotional), then upload it back: Cards tab, open the deck, Excel Template, Upload completed template. Upload replaces every card in the deck.",
     "",
-    "The leader is the teacher. An assistant condensing a devotional into cards is only an editor and organizer: every card title, bullet, key line, and transition must trace back to something the leader wrote or approved. Do not add teaching content.",
+    "The leader is the teacher. An assistant condensing a devotional into cards is only an editor and organizer: every card title, bullet, last point, and transition must trace back to something the leader wrote or approved. Do not add teaching content.",
     "",
     "  • Deck = title, passage, subtitle. Fill column B.",
     ...cueCardInstructionRows(),
     "",
-    "Before returning, check: 1) cards follow the order of the devotional  2) every bullet traces to the devotional  3) each key line is the leader's own wording  4) each transition leads naturally to the next card  5) no card has more than 6 bullets  6) sheet names and header rows unchanged. Delete the example rows. Return as .xlsx.",
+    "Before returning, check: 1) cards follow the order of the devotional  2) every bullet traces to the devotional  3) each last point is the leader's own wording  4) each transition leads naturally to the next card  5) no card has more than 6 bullets  6) sheet names and header rows unchanged. Delete the example rows. Return as .xlsx.",
   ];
   const rs = XLSX.utils.aoa_to_sheet(readme.map((s) => [s]));
   rs["!cols"] = [{ wch: 140 }];
@@ -200,7 +200,7 @@ export function parseCueCardSheets(XLSX: XLSXModule, wb: any): ParsedDeck | null
   if (hi === -1) { errors.push(`The '${SHEET_CARDS}' sheet is missing its header row (Order, Card title, ...).`); return out; }
   const header = rows[hi].map(norm);
   const col = (name: string) => header.indexOf(norm(name));
-  const cOrder = col("Order"), cTitle = col("Card title"), cRef = col("Scripture"), cKey = col("Key line"), cTrans = col("Transition"), cNotes = col("Notes"), cColor = col("Color");
+  const cOrder = col("Order"), cTitle = col("Card title"), cRef = col("Scripture"), cKey = col("Last point") >= 0 ? col("Last point") : col("Key line") /* older templates */, cTrans = col("Transition"), cNotes = col("Notes"), cColor = col("Color");
   if (cTitle === -1) { errors.push("Cue Cards header must include 'Card title'."); return out; }
 
   type Row = ParsedDeck["cards"][number] & { order: number };
