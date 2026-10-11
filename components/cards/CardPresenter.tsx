@@ -169,20 +169,21 @@ export default function CardPresenter({
               )}
               {c.transition && (
                 <div className="mt-3 text-[#9fb0d3] leading-snug" style={{ fontSize: outline ? "15px" : "clamp(14px, 3.8vw, 17px)" }}>
-                  <span className="mr-1 font-semibold text-[#e6ecf5]">{last ? "Close" : "Next →"}</span>{c.transition}
+                  <span className="mr-1 font-semibold text-[#e6ecf5]">{last ? "Close:" : "Transition:"}</span>{c.transition}
                 </div>
               )}
 
-              {/* What the next card is about, so the transition lands somewhere. */}
+              {/* The next card's own headline, read live from the deck order (never typed),
+                  so reordering cards updates it on its own. Last card just says End. */}
               {!outline && (
-                <div className="mt-3 pt-2 border-t border-[#1f2a44] text-xs leading-snug">
+                <div className="mt-3 pt-2 border-t border-[#1f2a44] leading-snug">
                   {next ? (
-                    <>
-                      <span className="font-semibold uppercase tracking-widest text-[#9fb0d3]">Up next</span>
-                      <span className="ml-2 text-[#e6ecf5]" style={{ fontSize: "clamp(13px, 3.6vw, 16px)" }}>{next.title || "Untitled card"}</span>
-                    </>
+                    <div className="flex items-baseline gap-2">
+                      <span className="shrink-0 rounded-md bg-[#1f2a44] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-[#9fb0d3]">Up next</span>
+                      <span className="font-semibold text-[#e6ecf5]" style={{ fontSize: "clamp(14px, 3.9vw, 18px)" }}>{next.title || "Untitled card"}</span>
+                    </div>
                   ) : (
-                    <span className="font-semibold uppercase tracking-widest text-[#9fb0d3]">End</span>
+                    <span className="rounded-md bg-[#1f2a44] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-[#9fb0d3]">End</span>
                   )}
                 </div>
               )}
