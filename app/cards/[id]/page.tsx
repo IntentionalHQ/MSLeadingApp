@@ -8,6 +8,7 @@ import { cardFitWarning, filledBullets, normalizeCard } from "@/lib/cueCards";
 import type { ParsedDeck } from "@/lib/cueCardsXlsx";
 import PageHeader from "@/components/PageHeader";
 import Confirm from "@/components/Confirm";
+import { trashRow } from "@/lib/trash";
 import AutoTextarea from "@/components/AutoTextarea";
 import SaveIndicator from "@/components/outline/SaveIndicator";
 import { useSaveState } from "@/components/outline/useBlurSave";
@@ -35,7 +36,10 @@ export default function DeckEditorPage() {
       supabase.from("cue_cards").select("*").eq("deck_id", id).order("position"),
     ]);
     setDeck((d as CueDeck) ?? null);
-    setCards(((c ?? []) as any[]).map(normalizeCard));
+    const rows = ((c ?? []) as any[]).map(normalizeCard);
+    setCards(rows);
+    // Open the first card so the editing form is in view, not hidden behind a tap.
+    setExpanded((cur) => cur ?? rows[0]?.id ?? null);
   };
   useEffect(() => { load(); }, [id]);
 
@@ -95,8 +99,9 @@ export default function DeckEditorPage() {
     persistPositions(remaining, cards);
   };
 
+  // Into the trash (restore from the Cards tab for 30 days).
   const deleteDeck = async () => {
-    await supabase.from("cue_decks").delete().eq("id", id);
+    await trashRow("cue_decks", id);
     router.push("/cards");
   };
 
@@ -191,6 +196,7 @@ export default function DeckEditorPage() {
       </div>
 
       {/* Cards */}
+      {cards.length > 0 && <div className="text-xs text-[#9fb0d3] -mb-1">Tap a card to edit it. Drag ⠿ to reorder.</div>}
       <div ref={listRef} className="space-y-2">
         {cards.map((c, i) => {
           const isOpen = expanded === c.id;
@@ -212,12 +218,12 @@ export default function DeckEditorPage() {
                         </span>
                       )}
                     </span>
-                    <span className={`shrink-0 text-[#9fb0d3] transition-transform ${isOpen ? "rotate-90" : ""}`} aria-hidden>›</span>
+                    <span className={"shrink-0 rounded-lg px-2.5 py-1 text-xs font-semibold " + (isOpen ? "bg-[#1f2a44] text-[#9fb0d3]" : "bg-blue-600 text-white")}>{isOpen ? "Done" : "✎ Edit"}</span>
                   </button>
                 </div>
 
                 {!isOpen && (c.bullets.length > 0 || c.key_line) && (
-                  <div className="px-3 pb-3 -mt-1">
+                  <div role="button" tabIndex={0} onClick={() => setExpanded(c.id)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpanded(c.id); } }} className="px-3 pb-3 -mt-1 cursor-pointer" title="Tap to edit this card">
                     <ul className="space-y-0.5">{filledBullets(c.bullets).map((b) => <CueBulletView key={b.id} bullet={b} size="sm" />)}</ul>
                     {c.key_line && <div className="mt-2 text-sm italic border-l-2 border-blue-500 pl-2 text-[#e6ecf5]">“{c.key_line}”</div>}
                   </div>
