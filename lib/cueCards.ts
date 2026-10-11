@@ -121,20 +121,18 @@ export function colorToCell(color: CueColor): string {
   return color ? CUE_COLORS.find((c) => c.id === color)?.label ?? "" : "";
 }
 
-/** Rough "will this fit on a phone without scrolling" check for the editor. */
 /** Bullets with text; a row the leader added but never typed in is ignored everywhere but the editor. */
 export function filledBullets(bullets: CueBullet[]): CueBullet[] {
   return bullets.filter((b) => b.text.trim());
 }
 
+/** A quiet note for the editor when a card is long enough that its bullets will scroll on a phone. Not a limit: the presenter scrolls the bullets and keeps the Last point / Transition / Up next pinned. */
 export function cardFitWarning(card: Pick<CueCard, "title" | "bullets" | "key_line" | "transition">): string | null {
   const bullets = filledBullets(card.bullets);
   const bulletChars = bullets.reduce((a, b) => a + b.text.length, 0);
-  const longest = bullets.reduce((a, b) => Math.max(a, b.text.length), 0);
-  if (bullets.length > 6) return "More than 6 bullets will not fit on a phone screen.";
-  if (longest > 110) return "One bullet is very long — trim it so the card fits on a phone.";
-  if (bulletChars + card.title.length + (card.key_line?.length ?? 0) + (card.transition?.length ?? 0) > 620) {
-    return "This card is wordy — it may not fit on a phone without scrolling.";
+  const lines = bullets.reduce((a, b) => a + b.text.split("\n").length, 0);
+  if (bullets.length > 6 || lines > 8 || bulletChars > 450) {
+    return "Long card: on a phone the bullets will scroll (with a ⌄ more hint) while the Last point and Transition stay pinned.";
   }
   return null;
 }

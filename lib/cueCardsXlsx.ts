@@ -61,7 +61,7 @@ export function cueCardInstructionRows(): string[] {
     "      Highlight: optional. One of: " + CUE_COLORS.filter((c) => c.id).map((c) => c.label).join(", ") + ". Blank = none.",
     "  • Symbols mean: Main idea = the point of the card; Action = something to tell students to do; Research = the leader wants to look this up; Trap = a wrong idea to warn against; No way = a surprising fact; Question = something students may not get; Quote = a line to say word for word (shown in italics).",
     "  • Use symbols and highlights sparingly — one or two per card. They are for the leader's eye on stage, not decoration.",
-    "  • Each card must fit on a phone screen: at most 6 bullets, each under ~100 characters.",
+    "  • Keep cards glanceable: 3-5 bullets is the sweet spot. A longer card still works; on a phone its bullets scroll while the last point and transition stay on screen.",
     "  • Do not rename the sheets or the header rows. The upload looks for them by name.",
   ];
 }
@@ -116,7 +116,7 @@ export async function buildDeckTemplate(deck: CueDeck, cards: CueCard[]): Promis
     "  • Deck = title, passage, subtitle. Fill column B.",
     ...cueCardInstructionRows(),
     "",
-    "Before returning, check: 1) cards follow the order of the devotional  2) every bullet traces to the devotional  3) each last point is the leader's own wording  4) each transition leads naturally to the next card  5) no card has more than 6 bullets  6) sheet names and header rows unchanged. Delete the example rows. Return as .xlsx.",
+    "Before returning, check: 1) cards follow the order of the devotional  2) every bullet traces to the devotional  3) each last point is the leader's own wording  4) each transition leads naturally to the next card  5) cards are glanceable, not paragraphs  6) sheet names and header rows unchanged. Delete the example rows. Return as .xlsx.",
   ];
   const rs = XLSX.utils.aoa_to_sheet(readme.map((s) => [s]));
   rs["!cols"] = [{ wch: 140 }];
@@ -255,7 +255,7 @@ export function parseCueCardSheets(XLSX: XLSXModule, wb: any): ParsedDeck | null
       for (const c of cards) {
         const list = (grouped[c.order] ?? []).sort((a, b) => a.order - b.order).map((x) => x.bullet);
         c.bullets = list;
-        if (list.length > 6) warnings.push(`Card ${c.order} has ${list.length} bullets; more than 6 will not fit on a phone.`);
+        if (list.length > 8) warnings.push(`Card ${c.order} has ${list.length} bullets; that is a lot to glance at on stage.`);
       }
     }
   } else {

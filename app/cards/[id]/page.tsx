@@ -265,7 +265,7 @@ export default function DeckEditorPage() {
                       {(c.scripture_ref || warn) && (
                         <span className="block text-xs truncate">
                           {c.scripture_ref && <span className="text-[#9fb0d3]">{c.scripture_ref}</span>}
-                          {warn && <span className="text-amber-400">{c.scripture_ref ? " · " : ""}⚠ may not fit</span>}
+                          {warn && <span className="text-[#9fb0d3]">{c.scripture_ref ? " · " : ""}scrolls on phone</span>}
                         </span>
                       )}
                     </span>
@@ -346,7 +346,7 @@ export default function DeckEditorPage() {
                       <AutoTextarea rows={2} defaultValue={c.transition ?? ""} placeholder="She reaches out, touches his robe, and is healed. But what Jesus calls her next might be even more powerful."
                         onBlur={(e) => { if ((e.target.value || null) !== c.transition) patchCard(c.id, { transition: e.target.value || null }); }} />
                     </div>
-                    {warn && <div className="text-xs text-amber-400">⚠ {warn}</div>}
+                    {warn && <div className="text-xs text-[#9fb0d3]">{warn}</div>}
                     <div className="flex flex-wrap gap-2 pt-1">
                       <button type="button" onClick={() => reorder(i, i - 1)} disabled={i === 0} className="btn btn-ghost" aria-label="Move up">↑</button>
                       <button type="button" onClick={() => reorder(i, i + 1)} disabled={i === cards.length - 1} className="btn btn-ghost" aria-label="Move down">↓</button>
