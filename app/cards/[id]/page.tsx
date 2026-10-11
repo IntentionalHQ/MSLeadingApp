@@ -233,6 +233,28 @@ export default function DeckEditorPage() {
             <div className="text-xs text-[#9fb0d3] mt-1">The presenter counts down from this next to the running clock.</div>
           </div>
         </div>
+        {/* Name each section colour in use; the presenter shows "● name · → ● next name". */}
+        {CUE_COLORS.some((col) => col.id && cards.some((c) => c.color === col.id)) && (
+          <div>
+            <label>Section names</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {CUE_COLORS.filter((col) => col.id && cards.some((c) => c.color === col.id)).map((col) => (
+                <div key={col.id} className="flex items-center gap-2">
+                  <span className="h-4 w-4 shrink-0 rounded-full" style={{ background: colorSolid(col.id) ?? undefined }} aria-hidden />
+                  <input defaultValue={deck.section_names?.[col.id] ?? ""} placeholder={`${col.label} cards are…`}
+                    onBlur={(e) => {
+                      const v = e.target.value.trim();
+                      if (v === (deck.section_names?.[col.id] ?? "")) return;
+                      const next = { ...(deck.section_names ?? {}) };
+                      if (v) next[col.id] = v; else delete next[col.id];
+                      patchDeck({ section_names: next });
+                    }} />
+                </div>
+              ))}
+            </div>
+            <div className="text-xs text-[#9fb0d3] mt-1">Shown while presenting as where you are and what's next.</div>
+          </div>
+        )}
       </div>
 
       {/* Cards | Notes */}

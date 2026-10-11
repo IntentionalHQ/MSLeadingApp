@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CueBullet, CueCard, CueDeck } from "@/lib/types";
 import CueBulletView from "./CueBulletView";
 import CardQuickEdit, { type CardQuickPatch } from "./CardQuickEdit";
-import { colorSolid, filledBullets } from "@/lib/cueCards";
+import { CUE_COLORS, colorSolid, filledBullets } from "@/lib/cueCards";
 
 export type PresenterMode = "cards" | "outline";
 
@@ -285,7 +285,21 @@ export default function CardPresenter({
 
       {/* Chrome: thin progress line, exit, mode toggle, "Card 2 of 4", clock. */}
       <div className="pointer-events-none absolute inset-x-0 top-0">
-        <div className="h-0.5 bg-[#1f2a44]">{!outline && <div className="h-0.5 bg-blue-500" style={{ width: `${n ? ((idx + 1) / n) * 100 : 0}%` }} />}</div>
+        {/* Progress as one segment per card, tinted with the card's section colour
+            (neutral when none), passed cards filled and the current one lit. */}
+        <div className="flex h-1 gap-px bg-[#0b1220]">
+          {cards.map((c, i) => {
+            const tint = colorSolid(c.color) ?? "#3b82f6";
+            const state = outline ? "off" : i < idx ? "done" : i === idx ? "now" : "off";
+            return (
+              <div key={c.id} className="flex-1" style={{
+                background: state === "off" ? "#1f2a44" : tint,
+                opacity: state === "done" ? 0.55 : 1,
+                boxShadow: state === "now" ? `0 0 6px ${tint}` : undefined,
+              }} />
+            );
+          })}
+        </div>
         <div className="mx-auto flex max-w-2xl items-center justify-between gap-2 px-3 pt-2 text-sm">
           <div className="flex items-center gap-1.5">
             <button type="button" onClick={() => router.push(backHref)} className="pointer-events-auto btn btn-ghost !min-h-0 !px-3 !py-1.5 text-sm" aria-label="Exit presentation">✕</button>
@@ -305,6 +319,30 @@ export default function CardPresenter({
           </div>
           <Clocks since={since} goalMinutes={goalMinutes} paused={editing !== null} />
         </div>
+        {/* Where you are and what's next, by section colour. Only when the current card has one. */}
+        {!outline && n > 0 && cards[idx]?.color && (() => {
+          const names = deck.section_names ?? {};
+          const cur = cards[idx];
+          const label = (c: CueCard) => names[c.color] || CUE_COLORS.find((x) => x.id === c.color)?.label || "";
+          const nextGroup = cards.slice(idx + 1).find((c) => c.color !== cur.color);
+          return (
+            <div className="mx-auto flex max-w-2xl items-center gap-2 px-3 pt-1 text-xs text-[#9fb0d3]">
+              <span className="inline-flex min-w-0 items-center gap-1.5">
+                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: colorSolid(cur.color)! }} aria-hidden />
+                <span className="truncate font-semibold text-[#e6ecf5]">{label(cur)}</span>
+              </span>
+              <span aria-hidden>→</span>
+              {nextGroup ? (
+                <span className="inline-flex min-w-0 items-center gap-1.5">
+                  {colorSolid(nextGroup.color) && <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: colorSolid(nextGroup.color)! }} aria-hidden />}
+                  <span className="truncate">{nextGroup.color ? label(nextGroup) : "Uncoloured cards"}</span>
+                </span>
+              ) : (
+                <span>End</span>
+              )}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Dry run quick editor, over everything; the clock is paused while it's open. */}

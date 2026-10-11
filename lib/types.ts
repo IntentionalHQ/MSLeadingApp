@@ -186,6 +186,7 @@ export type CueDeck = {
   updated_at: string;
   notes: string | null;      // about the whole message; editor Notes tab only
   goal_minutes: number | null; // presenter counts down from this
+  section_names: Partial<Record<CueColor, string>>; // name per section colour, e.g. { yellow: "Opening" }
   deleted_at: string | null; // in the trash when set; see lib/trash.ts
 };
 

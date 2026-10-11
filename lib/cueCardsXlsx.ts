@@ -10,7 +10,7 @@ import type { CueBullet, CueCard, CueDeck } from "./types";
 import { CUE_COLORS, CUE_SYMBOLS, colorFromCell, colorToCell, newId, symbolsFromCell, symbolsToCell } from "./cueCards";
 
 export type ParsedDeck = {
-  deck: Partial<Pick<CueDeck, "title" | "passage" | "subtitle" | "notes" | "goal_minutes">>;
+  deck: Partial<Pick<CueDeck, "title" | "passage" | "subtitle" | "notes" | "goal_minutes" | "section_names">>;
   cards: Array<Pick<CueCard, "title" | "scripture_ref" | "bullets" | "key_line" | "transition" | "notes" | "color">>;
   errors: string[];
   warnings: string[];
@@ -124,6 +124,8 @@ export async function buildDeckTemplate(deck: CueDeck, cards: CueCard[]): Promis
 
   const deckRows: (string | null)[][] = [["Field", "Value (fill this column)"]];
   for (const [label, key] of DECK_KEYS) deckRows.push([label, (deck as any)[key] ?? ""]);
+  // One row per section colour: what that colour means in this deck.
+  for (const c of CUE_COLORS) if (c.id) deckRows.push([`Section name for ${c.label} cards`, deck.section_names?.[c.id] ?? ""]);
   const ds = XLSX.utils.aoa_to_sheet(deckRows);
   ds["!cols"] = [{ wch: 44 }, { wch: 80 }];
   XLSX.utils.book_append_sheet(wb, ds, SHEET_DECK);
@@ -181,6 +183,13 @@ export function parseCueCardSheets(XLSX: XLSXModule, wb: any): ParsedDeck | null
     const rows = XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets[deckName], { header: 1, raw: false, defval: "" });
     for (const row of rows) {
       const label = norm(row[0]);
+      const sec = label.match(/^section name for (\w+) cards?$/);
+      if (sec) {
+        const color = colorFromCell(sec[1]);
+        const name = cellText(row[1]);
+        if (color && name) out.deck.section_names = { ...(out.deck.section_names ?? {}), [color]: name };
+        continue;
+      }
       const hit = DECK_KEYS.find(([l]) => norm(l) === label || label.startsWith(norm(l).split(" (")[0]));
       if (!hit) continue;
       if (hit[1] === "goal_minutes") {
