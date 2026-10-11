@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CueBullet, CueCard, CueDeck } from "@/lib/types";
 import CueBulletView from "./CueBulletView";
 import CardQuickEdit, { type CardQuickPatch } from "./CardQuickEdit";
@@ -71,6 +71,9 @@ export default function CardPresenter({
     const el = scroller.current;
     if (!el) return;
     const io = new IntersectionObserver((entries) => {
+      // Right after a resize the old scroll position points into a different
+      // card for a moment; ignore those readings so the real card is kept.
+      if (Date.now() < settlingUntil.current) return;
       for (const e of entries) {
         if (!e.isIntersecting) continue;
         const i = Number((e.target as HTMLElement).dataset.idx);
@@ -137,15 +140,66 @@ export default function CardPresenter({
 
   const outline = mode === "outline";
 
+  // Phones stay upright relative to the phone body. The web can't lock
+  // rotation (iPhone ignores every method), so when a phone turns landscape
+  // the whole presenter counter-rotates to fill the screen as a portrait
+  // box. Tablets and desktops rotate freely.
+  const [lock, setLock] = useState<{ deg: 0 | 90 | -90; w: number; h: number }>({ deg: 0, w: 0, h: 0 });
+  useEffect(() => {
+    const update = () => {
+      const phone = Math.min(window.screen.width, window.screen.height) < 600;
+      const landscape = window.innerWidth > window.innerHeight;
+      if (!phone || !landscape) { setLock({ deg: 0, w: 0, h: 0 }); return; }
+      const type = window.screen.orientation?.type;
+      const legacy = (window as any).orientation as number | undefined;
+      const secondary = type ? type === "landscape-secondary" : legacy === -90;
+      setLock({ deg: secondary ? 90 : -90, w: window.innerWidth, h: window.innerHeight });
+    };
+    update();
+    window.addEventListener("resize", update);
+    window.screen.orientation?.addEventListener?.("change", update);
+    // Android honours this in an installed app or fullscreen; everything else ignores it.
+    (window.screen.orientation as any)?.lock?.("portrait")?.catch?.(() => {});
+    return () => { window.removeEventListener("resize", update); window.screen.orientation?.removeEventListener?.("change", update); };
+  }, []);
+  // Stay on the same card through any resize or rotation: the card height
+  // changes, so the old scroll position would land in a different card.
+  const settlingUntil = useRef(0);
+  useEffect(() => {
+    const onResize = () => {
+      settlingUntil.current = Date.now() + 500;
+      requestAnimationFrame(() => goTo(idxRef.current, false));
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [n]);
+  useLayoutEffect(() => {
+    if (mode !== "cards") return;
+    settlingUntil.current = Date.now() + 500;
+    goTo(idxRef.current, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lock.deg, lock.w, lock.h]);
+
+  const rootStyle = (lock.deg
+    ? {
+        position: "fixed", top: 0, left: 0,
+        width: lock.h, height: lock.w,                 // a portrait box on a landscape screen
+        transformOrigin: "top left",
+        transform: lock.deg === -90 ? "rotate(-90deg) translateX(-100%)" : "rotate(90deg) translateY(-100%)",
+        "--card-h": `${lock.w}px`,
+      }
+    : { height: "100dvh", "--card-h": "100dvh" }) as unknown as React.CSSProperties;
+
   return (
-    <div className="fixed inset-0 z-50 bg-[#0b1220] text-[#e6ecf5]" style={{ height: "100dvh" }}>
+    <div className="fixed inset-0 z-50 bg-[#0b1220] text-[#e6ecf5]" style={rootStyle}>
       <div
         ref={scroller}
         className={"h-full w-full overflow-y-auto overscroll-y-contain " + (outline ? "" : "snap-y snap-mandatory")}
-        style={{ touchAction: "pan-y", scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+        style={{ touchAction: lock.deg ? "auto" : "pan-y", scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
       >
         {n === 0 && (
-          <section className="flex flex-col items-center justify-center px-6 text-center" style={{ height: "100dvh" }}>
+          <section className="flex flex-col items-center justify-center px-6 text-center" style={{ height: "var(--card-h)" }}>
             <div className="text-xl font-bold">This deck has no cards yet.</div>
             <div className="mt-2 text-sm text-[#9fb0d3]">Add cards on the Cards tab, then present.</div>
           </section>
@@ -174,7 +228,7 @@ export default function CardPresenter({
               }
               style={outline
                 ? (colorSolid(c.color) ? { borderLeft: `4px solid ${colorSolid(c.color)}`, paddingLeft: "1rem" } : undefined)
-                : { height: "100dvh" }}
+                : { height: "var(--card-h)" }}
             >
               {/* Dry run: open this card in the quick editor; the clock pauses while it's open. */}
               {rehearse && !outline && onSaveCard && (

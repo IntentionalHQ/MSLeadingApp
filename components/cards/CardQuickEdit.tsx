@@ -44,7 +44,7 @@ export default function CardQuickEdit({
   };
 
   return (
-    <div className="fixed inset-0 z-[60] overflow-y-auto overscroll-y-contain bg-[#0b1220] text-[#e6ecf5]" style={{ height: "100dvh" }}>
+    <div className="fixed inset-0 z-[60] h-full overflow-y-auto overscroll-y-contain bg-[#0b1220] text-[#e6ecf5]">
       <div className="mx-auto w-full max-w-2xl px-4 pb-28 pt-4 space-y-3">
         <div className="flex items-center justify-between gap-2">
           <div className="text-xs font-semibold uppercase tracking-widest text-[#9fb0d3]">Editing card {index + 1} of {total} · clock paused</div>
