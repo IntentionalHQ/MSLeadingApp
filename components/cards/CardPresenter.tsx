@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import type { CueCard, CueDeck } from "@/lib/types";
+import type { CueBullet, CueCard, CueDeck } from "@/lib/types";
 import CueBulletView from "./CueBulletView";
 import { colorSolid, filledBullets } from "@/lib/cueCards";
 
@@ -93,6 +93,15 @@ export default function CardPresenter({
     let wheelLock = 0;
     const onWheel = (e: WheelEvent) => {
       if (Math.abs(e.deltaY) < 8) return;
+      // Over a bullet list that can still scroll that way, let the list scroll;
+      // only step cards once it's at its end (or the wheel is elsewhere).
+      const list = (e.target as HTMLElement | null)?.closest?.("ul");
+      if (list && list.scrollHeight > list.clientHeight) {
+        const canScroll = e.deltaY > 0
+          ? list.scrollTop + list.clientHeight < list.scrollHeight - 1
+          : list.scrollTop > 0;
+        if (canScroll) return;
+      }
       e.preventDefault();
       const now = Date.now();
       if (now - wheelLock < 450) return;
@@ -170,12 +179,13 @@ export default function CardPresenter({
               <h2 className="mt-1 font-bold leading-tight" style={{ fontSize: outline ? "22px" : "clamp(22px, 6vw, 34px)" }}>{c.title || "Untitled card"}</h2>
 
               {/* Card mode: bullets are the flexible middle and only scroll if a card is too long. */}
-              <ul
-                className={"mt-4 space-y-1.5 " + (outline ? "" : "min-h-0 flex-1 overflow-y-auto overscroll-y-contain")}
-                style={outline ? undefined : { scrollbarWidth: "none" }}
-              >
-                {filledBullets(c.bullets).map((b) => <CueBulletView key={b.id} bullet={b} size={outline ? "md" : "lg"} />)}
-              </ul>
+              {outline ? (
+                <ul className="mt-4 space-y-1.5">
+                  {filledBullets(c.bullets).map((b) => <CueBulletView key={b.id} bullet={b} size="md" />)}
+                </ul>
+              ) : (
+                <ScrollableBullets bullets={filledBullets(c.bullets)} />
+              )}
 
               {/* The three closing blocks are colour-coded so the eye finds them at a glance:
                   blue = last point (the last thing to say on this card), purple = transition (walk into the next card),
@@ -225,6 +235,41 @@ export default function CardPresenter({
           <Clocks since={since} goalMinutes={goalMinutes} />
         </div>
       </div>
+    </div>
+  );
+}
+
+// Card mode's bullet area: the flexible middle of the card, scrolling on its
+// own only when there is more than fits. While there is more below, a fade
+// and a "⌄ more" chip say so; both go once you reach the end.
+function ScrollableBullets({ bullets }: { bullets: CueBullet[] }) {
+  const ref = useRef<HTMLUListElement | null>(null);
+  const [more, setMore] = useState(false);
+  const check = () => {
+    const el = ref.current;
+    if (el) setMore(el.scrollHeight - el.clientHeight - el.scrollTop > 8);
+  };
+  // Size changes (rotation, fonts loading, a resize) re-check; scrolling
+  // re-checks through React's onScroll below.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bullets.length]);
+  return (
+    <div className="relative mt-4 min-h-0 flex-1 flex flex-col">
+      <ul ref={ref} onScroll={check} className="min-h-0 flex-1 space-y-1.5 overflow-y-auto overscroll-y-contain" style={{ scrollbarWidth: "none" }}>
+        {bullets.map((b) => <CueBulletView key={b.id} bullet={b} size="lg" />)}
+      </ul>
+      {more && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pt-10 pb-1" style={{ background: "linear-gradient(to bottom, rgba(11,18,32,0), #0b1220 70%)" }} aria-hidden>
+          <span className="rounded-full bg-[#1f2a44] px-2.5 py-0.5 text-xs font-semibold text-[#9fb0d3]">⌄ more</span>
+        </div>
+      )}
     </div>
   );
 }
