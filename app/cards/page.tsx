@@ -5,12 +5,11 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { CueDeck } from "@/lib/types";
 import PageHeader from "@/components/PageHeader";
-import Confirm from "@/components/Confirm";
-import { TRASH_DAYS, daysLeft, purgeOld, restoreRow, trashRow } from "@/lib/trash";
+import { TRASH_DAYS, daysLeft, purgeOld, restoreRow } from "@/lib/trash";
 
 // Cards tab: every cue card deck. A deck stands on its own here; a Sunday's
-// Cue Cards section links to one of these by id. Deleting moves a deck to
-// "Recently deleted" for 30 days, where it can be restored.
+// Cue Cards section links to one of these by id. Decks are deleted only from
+// inside their editor (into "Recently deleted" for 30 days, restorable here).
 export default function CardsPage() {
   const router = useRouter();
   const [decks, setDecks] = useState<CueDeck[]>([]);
@@ -43,7 +42,6 @@ export default function CardsPage() {
     else setBusy(false);
   };
 
-  const trash = async (id: string) => { await trashRow("cue_decks", id); load(); };
   const restore = async (id: string) => { await restoreRow("cue_decks", id); load(); };
 
   const cardCount = (id: string) => { const n = counts[id] ?? 0; return `${n} card${n === 1 ? "" : "s"}`; };
@@ -78,7 +76,6 @@ export default function CardsPage() {
                 <div className="flex gap-2 shrink-0">
                   <Link href={`/cards/${d.id}`} className="btn btn-ghost">Edit</Link>
                   <Link href={`/cards/${d.id}/present`} className={"btn btn-primary" + (n === 0 ? " pointer-events-none opacity-40" : "")} aria-disabled={n === 0}>▶ Present</Link>
-                  <Confirm label="🗑" title="Delete deck" confirmLabel="Delete deck" onConfirm={() => trash(d.id)} />
                 </div>
               </li>
             );

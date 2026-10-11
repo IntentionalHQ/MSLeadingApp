@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import type { CueBullet, CueColor, CueSymbol } from "@/lib/types";
 import { CUE_COLORS, CUE_SYMBOLS, CUE_SYMBOLS_BY_ID, colorBg, newBullet } from "@/lib/cueCards";
 import AutoTextarea from "@/components/AutoTextarea";
+import Confirm from "@/components/Confirm";
 
 // Memory-trigger bullets for one card. Each row: symbol badge, text, and a
 // "mark" toggle that opens the symbol + highlight toolbar for that row only
@@ -74,7 +75,9 @@ export default function BulletEditor({ bullets, onChange }: { bullets: CueBullet
               {/* Phones: the text box gets the whole row; move/delete live in the toolbar below. */}
               <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="hidden sm:inline-flex shrink-0 text-[#9fb0d3] px-1 disabled:opacity-30" aria-label="Move up">↑</button>
               <button type="button" onClick={() => move(i, 1)} disabled={i === bullets.length - 1} className="hidden sm:inline-flex shrink-0 text-[#9fb0d3] px-1 disabled:opacity-30" aria-label="Move down">↓</button>
-              <button type="button" onClick={() => remove(b.id)} className="hidden sm:inline-flex shrink-0 text-[#9fb0d3] hover:text-red-400 px-1" aria-label="Delete bullet">✕</button>
+              <span className="hidden sm:inline-flex shrink-0 items-center">
+                <Confirm label="✕" title="Delete bullet" confirmLabel="Delete" className="text-[#9fb0d3] hover:text-red-400 px-1" onConfirm={() => remove(b.id)} />
+              </span>
             </div>
 
             {open === b.id && (
@@ -114,7 +117,7 @@ export default function BulletEditor({ bullets, onChange }: { bullets: CueBullet
                 <div className="flex gap-2 sm:hidden">
                   <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="btn btn-ghost !min-h-[36px] !py-1 text-sm flex-1" aria-label="Move up">↑ Up</button>
                   <button type="button" onClick={() => move(i, 1)} disabled={i === bullets.length - 1} className="btn btn-ghost !min-h-[36px] !py-1 text-sm flex-1" aria-label="Move down">↓ Down</button>
-                  <button type="button" onClick={() => remove(b.id)} className="btn btn-ghost !min-h-[36px] !py-1 text-sm flex-1 text-red-400" aria-label="Delete bullet">✕ Delete</button>
+                  <Confirm label="✕ Delete" title="Delete bullet" confirmLabel="Delete" className="btn btn-ghost !min-h-[36px] !py-1 text-sm flex-1 text-red-400" onConfirm={() => remove(b.id)} />
                 </div>
               </div>
             )}

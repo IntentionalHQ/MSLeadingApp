@@ -243,7 +243,7 @@ export default function DeckEditorPage() {
       {tab === "cards" && (<>
       {/* Cards */}
       {cards.length > 0 && <div className="text-xs text-[#9fb0d3] -mb-1">Tap a card to edit it. Drag ⠿ to reorder.</div>}
-      <div ref={listRef} className="space-y-2">
+      <div ref={listRef} className="space-y-5">
         {cards.map((c, i) => {
           const isOpen = expanded === c.id;
           const warn = cardFitWarning(c);
@@ -252,13 +252,14 @@ export default function DeckEditorPage() {
               {dragging && dragging.overIndex === i && <div className="h-0.5 bg-blue-500 rounded mb-2" />}
               <div
                 id={`card-${c.id}`}
-                className={`card overflow-hidden ${dragging?.id === c.id ? "opacity-50" : ""}`}
+                className={`card overflow-hidden border-2 border-[#2f3d60] shadow-lg shadow-black/30 ${dragging?.id === c.id ? "opacity-50" : ""}`}
                 style={colorSolid(c.color) ? { borderLeft: `5px solid ${colorSolid(c.color)}` } : undefined}
               >
-                <div className="flex items-stretch">
+                {/* Header band: a lighter strip with the card number, so each card reads as its own block. */}
+                <div className="flex items-stretch bg-[#172138] border-b border-[#2a3654]">
                   <span onPointerDown={startDrag(c.id)} role="button" aria-label="Drag to reorder" className="touch-none cursor-grab select-none text-[#9fb0d3] px-2 py-3 flex items-center">⠿</span>
                   <button type="button" onClick={() => openCard(expanded === c.id ? null : c.id)} className="flex-1 flex items-center gap-2 py-3 pr-3 text-left min-w-0">
-                    <span className="text-[#9fb0d3] text-xs font-mono shrink-0">{i + 1}/{cards.length}</span>
+                    <span className="shrink-0 rounded-md bg-[#2a3654] px-1.5 py-0.5 text-xs font-mono text-[#e6ecf5]">{i + 1}/{cards.length}</span>
                     <span className="flex-1 min-w-0">
                       <span className="block truncate font-semibold">{c.title || <span className="text-[#9fb0d3] font-normal">Untitled card</span>}</span>
                       {(c.scripture_ref || warn) && (
@@ -367,7 +368,7 @@ export default function DeckEditorPage() {
 
       {/* Notes: the full context of the message, card by card, for coming back to it later. Never shown in the presenter. */}
       {tab === "notes" && (
-        <div className="space-y-3">
+        <div className="space-y-5">
           <div className="card p-4 space-y-2">
             <label>About this message</label>
             <AutoTextarea rows={4} defaultValue={deck.notes ?? ""} placeholder="What this message was about, who it was for, what you hoped would land. Anything future-you needs to pick it back up."
@@ -375,9 +376,9 @@ export default function DeckEditorPage() {
           </div>
           {cards.length === 0 && <div className="card p-4 text-sm text-[#9fb0d3]">Add cards on the Cue Cards tab; each one gets its own notes section here.</div>}
           {cards.map((c, i) => (
-            <div key={c.id} className="card p-4 space-y-2">
-              <div className="flex items-baseline gap-2 min-w-0">
-                <span className="text-[#9fb0d3] text-xs font-mono shrink-0">{i + 1}/{cards.length}</span>
+            <div key={c.id} className="card overflow-hidden border-2 border-[#2f3d60] shadow-lg shadow-black/30 p-4 pt-0 space-y-2">
+              <div className="-mx-4 mb-2 flex items-baseline gap-2 min-w-0 bg-[#172138] border-b border-[#2a3654] px-4 py-2.5">
+                <span className="shrink-0 rounded-md bg-[#2a3654] px-1.5 py-0.5 text-xs font-mono text-[#e6ecf5]">{i + 1}/{cards.length}</span>
                 <span className="font-semibold truncate">{c.title || <span className="text-[#9fb0d3] font-normal">Untitled card</span>}</span>
                 {c.scripture_ref && <span className="text-xs text-[#9fb0d3] shrink-0">{c.scripture_ref}</span>}
               </div>
