@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { CueBullet, CueCard, CueDeck } from "@/lib/types";
 import CueBulletView from "./CueBulletView";
+import CardQuickEdit, { type CardQuickPatch } from "./CardQuickEdit";
 import { colorSolid, filledBullets } from "@/lib/cueCards";
 
 export type PresenterMode = "cards" | "outline";
@@ -18,7 +19,7 @@ const RESUME_WINDOW_MS = 2 * 60 * 60 * 1000; // reopen within this and you're ba
 //    before speaking. Same cards, no snapping, no key stepping.
 // The clock is its own component so a ticking timer never re-renders the deck.
 export default function CardPresenter({
-  deck, cards, backHref, since, goalMinutes, initialMode = "cards",
+  deck, cards, backHref, since, goalMinutes, initialMode = "cards", rehearse = false, onSaveCard,
 }: {
   deck: CueDeck;
   cards: CueCard[];
@@ -26,10 +27,15 @@ export default function CardPresenter({
   since: number | null;         // epoch ms the section started (from Lead mode), null = start now
   goalMinutes: number | null;   // the countdown clock's target; null = no countdown
   initialMode?: PresenterMode;
+  rehearse?: boolean;           // dry run: an Edit pill on every card; editing pauses the clock
+  onSaveCard?: (cardId: string, patch: CardQuickPatch) => Promise<void>;
 }) {
   const router = useRouter();
   const scroller = useRef<HTMLDivElement | null>(null);
   const [mode, setMode] = useState<PresenterMode>(initialMode);
+  const [editing, setEditing] = useState<string | null>(null); // dry run: card id open in the quick editor
+  const editingRef = useRef<string | null>(null);
+  editingRef.current = editing;
   const [idx, setIdx] = useState(0);
   const idxRef = useRef(0);
   const storageKey = `cue:${deck.id}:idx`;
@@ -85,6 +91,8 @@ export default function CardPresenter({
   useEffect(() => {
     const stepping = mode === "cards";
     const onKey = (e: KeyboardEvent) => {
+      // While the quick editor is open, keys belong to it (Escape just closes it).
+      if (editingRef.current) { if (e.key === "Escape") setEditing(null); return; }
       if (e.key === "Escape") { router.push(backHref); return; }
       if (!stepping) return;
       if (["ArrowDown", "ArrowRight", "PageDown", " "].includes(e.key)) { e.preventDefault(); goTo(idxRef.current + 1); }
@@ -168,6 +176,12 @@ export default function CardPresenter({
                 ? (colorSolid(c.color) ? { borderLeft: `4px solid ${colorSolid(c.color)}`, paddingLeft: "1rem" } : undefined)
                 : { height: "100dvh" }}
             >
+              {/* Dry run: open this card in the quick editor; the clock pauses while it's open. */}
+              {rehearse && !outline && onSaveCard && (
+                <div className="mb-2 flex justify-end">
+                  <button type="button" onClick={() => setEditing(c.id)} className="btn btn-ghost !min-h-0 !px-3 !py-1 text-xs">✎ Edit this card</button>
+                </div>
+              )}
               {/* Section colour: a short bar above the card, so cards of one part of the message match. */}
               {!outline && colorSolid(c.color) && (
                 <div className="mb-2 h-1 w-12 rounded-full" style={{ background: colorSolid(c.color)! }} aria-hidden />
@@ -231,10 +245,30 @@ export default function CardPresenter({
               {outline ? "🃏 Cards" : "☰ Outline"}
             </button>
           </div>
-          <div className="font-mono tabular-nums text-[#9fb0d3] truncate">{n ? (outline ? "Outline" : `Card ${idx + 1} of ${n}`) : ""}</div>
-          <Clocks since={since} goalMinutes={goalMinutes} />
+          <div className="font-mono tabular-nums text-[#9fb0d3] truncate">
+            {rehearse && <span className="mr-1.5 rounded bg-amber-900/50 px-1 text-[10px] font-semibold uppercase tracking-widest text-amber-300">Dry run</span>}
+            {n ? (outline ? "Outline" : `Card ${idx + 1} of ${n}`) : ""}
+          </div>
+          <Clocks since={since} goalMinutes={goalMinutes} paused={editing !== null} />
         </div>
       </div>
+
+      {/* Dry run quick editor, over everything; the clock is paused while it's open. */}
+      {editing && onSaveCard && (() => {
+        const i = cards.findIndex((c) => c.id === editing);
+        const card = cards[i];
+        if (!card) return null;
+        return (
+          <CardQuickEdit
+            key={card.id}
+            card={card}
+            index={i}
+            total={n}
+            onSave={async (patch) => { await onSaveCard(card.id, patch); setEditing(null); }}
+            onCancel={() => setEditing(null)}
+          />
+        );
+      })()}
     </div>
   );
 }
@@ -280,11 +314,19 @@ const fmt = (secs: number) => `${String(Math.floor(secs / 60)).padStart(2, "0")}
 // Left: elapsed, always muted. Right (when there's a goal): counting down,
 // green at the start, sliding through yellow to orange-red over the last
 // 10%, then solid bold red once you're over.
-function Clocks({ since, goalMinutes }: { since: number | null; goalMinutes: number | null }) {
+function Clocks({ since, goalMinutes, paused = false }: { since: number | null; goalMinutes: number | null; paused?: boolean }) {
   const startRef = useRef<number>(since ?? Date.now());
   const [now, setNow] = useState(Date.now());
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
-  const elapsed = Math.max(0, Math.floor((now - startRef.current) / 1000));
+  // Paused time (the dry run's quick editor) never counts against the clocks.
+  const pausedAtRef = useRef<number | null>(null);
+  const pausedTotalRef = useRef(0);
+  useEffect(() => {
+    if (paused) pausedAtRef.current = Date.now();
+    else if (pausedAtRef.current != null) { pausedTotalRef.current += Date.now() - pausedAtRef.current; pausedAtRef.current = null; }
+  }, [paused]);
+  const pausedNow = pausedAtRef.current != null ? now - pausedAtRef.current : 0;
+  const elapsed = Math.max(0, Math.floor((now - startRef.current - pausedTotalRef.current - pausedNow) / 1000));
   const total = (goalMinutes ?? 0) * 60;
 
   let countdown: React.ReactNode = null;
@@ -306,7 +348,7 @@ function Clocks({ since, goalMinutes }: { since: number | null; goalMinutes: num
 
   return (
     <span className="flex items-center gap-2">
-      <span className="font-mono tabular-nums text-[#9fb0d3]" title="Elapsed">{fmt(elapsed)}</span>
+      <span className="font-mono tabular-nums text-[#9fb0d3]" title={paused ? "Paused" : "Elapsed"}>{paused ? "⏸ " : ""}{fmt(elapsed)}</span>
       {countdown && <span className="text-[#3b4a70]" aria-hidden>·</span>}
       {countdown}
     </span>

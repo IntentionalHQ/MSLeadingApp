@@ -4,9 +4,15 @@ import { useCallback, useEffect, useRef } from "react";
 // A textarea that grows to fit its content (no inner scrollbar) so long
 // scripts and discussion questions are readable while editing. Accepts every
 // normal textarea prop; `rows` sets the minimum height.
-export default function AutoTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+export default function AutoTextarea(props: React.ComponentPropsWithRef<"textarea">) {
   const ref = useRef<HTMLTextAreaElement | null>(null);
-  const { onInput, onBlur, className = "", ...rest } = props;
+  const { onInput, onBlur, className = "", ref: outerRef, ...rest } = props;
+  // A caller's ref (React 19 passes it as a prop) gets the element too.
+  const setRef = (el: HTMLTextAreaElement | null) => {
+    ref.current = el;
+    if (typeof outerRef === "function") outerRef(el);
+    else if (outerRef) (outerRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = el;
+  };
 
   // Full measure: collapse, read scrollHeight, set. Collapsing shortens the
   // page for a frame and the browser scrolls to compensate, so pin the scroll
@@ -33,8 +39,8 @@ export default function AutoTextarea(props: React.TextareaHTMLAttributes<HTMLTex
 
   return (
     <textarea
-      ref={ref}
       {...rest}
+      ref={setRef}
       className={`resize-none overflow-hidden ${className}`}
       onInput={(e) => { grow(); onInput?.(e); }}
       onBlur={(e) => { fit(); onBlur?.(e); }}
