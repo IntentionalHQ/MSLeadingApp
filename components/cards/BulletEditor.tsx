@@ -59,7 +59,8 @@ export default function BulletEditor({ bullets, onChange }: { bullets: CueBullet
                   : b.symbols.map((s) => { const Icon = CUE_SYMBOLS_BY_ID[s].icon; return <Icon key={s} className="size-4" />; })}
               </button>
               {/* A wrapping, auto-growing box so a long bullet is readable on a phone.
-                  Enter saves and moves on (never a line break); Backspace on an empty row removes it. */}
+                  Enter adds a line inside the bullet; Shift/Ctrl/Cmd+Enter saves and moves to
+                  the next bullet; Backspace on an empty row removes it. */}
               <AutoTextarea
                 id={`bullet-${b.id}`}
                 rows={1}
@@ -68,7 +69,12 @@ export default function BulletEditor({ bullets, onChange }: { bullets: CueBullet
                 className="!min-h-[36px] !py-1.5 !bg-transparent !border-0"
                 onBlur={(e) => { if (e.target.value !== b.text) update(b.id, { text: e.target.value }); }}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") { e.preventDefault(); (e.target as HTMLTextAreaElement).blur(); if (i === bullets.length - 1) add(); }
+                  if (e.key === "Enter" && (e.shiftKey || e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    (e.target as HTMLTextAreaElement).blur();
+                    if (i === bullets.length - 1) add();
+                    else document.getElementById(`bullet-${bullets[i + 1].id}`)?.focus();
+                  }
                   if (e.key === "Backspace" && !(e.target as HTMLTextAreaElement).value && bullets.length > 1) { e.preventDefault(); remove(b.id); }
                 }}
               />
@@ -125,6 +131,7 @@ export default function BulletEditor({ bullets, onChange }: { bullets: CueBullet
         );
       })}
       <button type="button" onClick={add} className="btn btn-ghost w-full !min-h-[40px] text-sm">+ Bullet</button>
+      <div className="hidden sm:block text-xs text-[#9fb0d3]">Enter = new line inside the bullet · Shift+Enter = next bullet</div>
     </div>
   );
 }
