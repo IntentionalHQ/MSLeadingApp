@@ -171,28 +171,26 @@ export default function CardPresenter({
                 {filledBullets(c.bullets).map((b) => <CueBulletView key={b.id} bullet={b} size={outline ? "md" : "lg"} />)}
               </ul>
 
+              {/* The three closing blocks are colour-coded so the eye finds them at a glance:
+                  blue = key line (land this), purple = transition (walk into the next card),
+                  green = up next (where you're walking to; read live from the deck order). */}
               {c.key_line && (
-                <div className="mt-3 border-l-4 border-blue-500 pl-3 italic leading-snug" style={{ fontSize: outline ? "17px" : "clamp(17px, 4.6vw, 23px)" }}>
-                  &ldquo;{c.key_line}&rdquo;
+                <div className="mt-3 border-l-4 border-blue-500 pl-3">
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-blue-400">Key line</div>
+                  <div className="italic leading-snug" style={{ fontSize: outline ? "17px" : "clamp(17px, 4.6vw, 23px)" }}>&ldquo;{c.key_line}&rdquo;</div>
                 </div>
               )}
               {c.transition && (
-                <div className="mt-3 text-[#9fb0d3] leading-snug" style={{ fontSize: outline ? "15px" : "clamp(14px, 3.8vw, 17px)" }}>
-                  <span className="mr-1 font-semibold text-[#e6ecf5]">{last ? "Close:" : "Transition:"}</span>{c.transition}
+                <div className="mt-3 border-l-4 border-purple-500 pl-3">
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-purple-400">{last ? "Close" : "Transition"}</div>
+                  <div className="leading-snug text-[#e6ecf5]" style={{ fontSize: outline ? "16px" : "clamp(16px, 4.3vw, 20px)" }}>{c.transition}</div>
                 </div>
               )}
-
-              {/* The next card's own headline, read live from the deck order (never typed),
-                  so reordering cards updates it on its own. Last card just says End. */}
               {!outline && (
-                <div className="mt-3 pt-2 border-t border-[#1f2a44] leading-snug">
-                  {next ? (
-                    <div className="flex items-baseline gap-2">
-                      <span className="shrink-0 rounded-md bg-[#1f2a44] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-[#9fb0d3]">Up next</span>
-                      <span className="font-semibold text-[#e6ecf5]" style={{ fontSize: "clamp(14px, 3.9vw, 18px)" }}>{next.title || "Untitled card"}</span>
-                    </div>
-                  ) : (
-                    <span className="rounded-md bg-[#1f2a44] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-[#9fb0d3]">End</span>
+                <div className="mt-3 border-l-4 border-green-500 pl-3">
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-green-400">{next ? "Up next" : "End"}</div>
+                  {next && (
+                    <div className="font-semibold leading-snug text-[#e6ecf5]" style={{ fontSize: "clamp(15px, 4vw, 19px)" }}>{next.title || "Untitled card"}</div>
                   )}
                 </div>
               )}
