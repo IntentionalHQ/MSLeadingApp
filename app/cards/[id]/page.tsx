@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { CueBullet, CueCard, CueDeck } from "@/lib/types";
@@ -28,6 +28,26 @@ export default function DeckEditorPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [tab, setTab] = useState<"cards" | "notes">("cards"); // Notes = in-depth context, never presented
   const [notesOpenFor, setNotesOpenFor] = useState<string | null>(null); // card whose notes are open inline on the Cards tab
+
+  // Opening a card collapses whichever card was open, which can shift the page
+  // under your finger. Remember where the tapped card was and keep it there.
+  const anchorRef = useRef<{ id: string; top: number } | null>(null);
+  const openCard = (cid: string | null) => {
+    if (cid) {
+      const el = document.getElementById(`card-${cid}`);
+      anchorRef.current = el ? { id: cid, top: el.getBoundingClientRect().top } : null;
+    }
+    setExpanded(cid);
+  };
+  useLayoutEffect(() => {
+    const a = anchorRef.current;
+    if (!a) return;
+    anchorRef.current = null;
+    const el = document.getElementById(`card-${a.id}`);
+    if (!el) return;
+    const delta = el.getBoundingClientRect().top - a.top;
+    if (Math.abs(delta) > 1) window.scrollBy(0, delta);
+  }, [expanded]);
   const [dragging, setDragging] = useState<{ id: string; overIndex: number } | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
   const rectsRef = useRef<DOMRect[]>([]);
@@ -237,7 +257,7 @@ export default function DeckEditorPage() {
               >
                 <div className="flex items-stretch">
                   <span onPointerDown={startDrag(c.id)} role="button" aria-label="Drag to reorder" className="touch-none cursor-grab select-none text-[#9fb0d3] px-2 py-3 flex items-center">⠿</span>
-                  <button type="button" onClick={() => setExpanded((cur) => (cur === c.id ? null : c.id))} className="flex-1 flex items-center gap-2 py-3 pr-3 text-left min-w-0">
+                  <button type="button" onClick={() => openCard(expanded === c.id ? null : c.id)} className="flex-1 flex items-center gap-2 py-3 pr-3 text-left min-w-0">
                     <span className="text-[#9fb0d3] text-xs font-mono shrink-0">{i + 1}/{cards.length}</span>
                     <span className="flex-1 min-w-0">
                       <span className="block truncate font-semibold">{c.title || <span className="text-[#9fb0d3] font-normal">Untitled card</span>}</span>
@@ -272,7 +292,7 @@ export default function DeckEditorPage() {
                 )}
 
                 {!isOpen && (c.bullets.length > 0 || c.key_line || c.transition) && (
-                  <div role="button" tabIndex={0} onClick={() => setExpanded(c.id)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpanded(c.id); } }} className="px-3 pb-3 -mt-1 cursor-pointer" title="Tap to edit this card">
+                  <div role="button" tabIndex={0} onClick={() => openCard(c.id)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openCard(c.id); } }} className="px-3 pb-3 -mt-1 cursor-pointer" title="Tap to edit this card">
                     <ul className="space-y-0.5">{filledBullets(c.bullets).map((b) => <CueBulletView key={b.id} bullet={b} size="sm" />)}</ul>
                     {c.key_line && <div className="mt-2 text-sm italic border-l-2 border-blue-500 pl-2 text-[#e6ecf5]">“{c.key_line}”</div>}
                     {c.transition && <div className="mt-2 text-sm border-l-2 border-purple-500 pl-2 text-[#9fb0d3]">{c.transition}</div>}
