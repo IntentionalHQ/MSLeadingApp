@@ -18,13 +18,13 @@ const RESUME_WINDOW_MS = 2 * 60 * 60 * 1000; // reopen within this and you're ba
 //    before speaking. Same cards, no snapping, no key stepping.
 // The clock is its own component so a ticking timer never re-renders the deck.
 export default function CardPresenter({
-  deck, cards, backHref, since, planMinutes, initialMode = "cards",
+  deck, cards, backHref, since, goalMinutes, initialMode = "cards",
 }: {
   deck: CueDeck;
   cards: CueCard[];
   backHref: string;
   since: number | null;         // epoch ms the section started (from Lead mode), null = start now
-  planMinutes: number | null;   // planned length, for the amber/red colouring
+  goalMinutes: number | null;   // the countdown clock's target; null = no countdown
   initialMode?: PresenterMode;
 }) {
   const router = useRouter();
@@ -216,23 +216,48 @@ export default function CardPresenter({
             </button>
           </div>
           <div className="font-mono tabular-nums text-[#9fb0d3] truncate">{n ? (outline ? "Outline" : `Card ${idx + 1} of ${n}`) : ""}</div>
-          <Clock since={since} planMinutes={planMinutes} />
+          <Clocks since={since} goalMinutes={goalMinutes} />
         </div>
       </div>
     </div>
   );
 }
 
-// Own component so the 1s tick only re-renders this span, never the deck.
-function Clock({ since, planMinutes }: { since: number | null; planMinutes: number | null }) {
+const fmt = (secs: number) => `${String(Math.floor(secs / 60)).padStart(2, "0")}:${String(secs % 60).padStart(2, "0")}`;
+
+// Own component so the 1s tick only re-renders these spans, never the deck.
+// Left: elapsed, always muted. Right (when there's a goal): counting down,
+// green at the start, sliding through yellow to orange-red over the last
+// 10%, then solid bold red once you're over.
+function Clocks({ since, goalMinutes }: { since: number | null; goalMinutes: number | null }) {
   const startRef = useRef<number>(since ?? Date.now());
   const [now, setNow] = useState(Date.now());
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
   const elapsed = Math.max(0, Math.floor((now - startRef.current) / 1000));
-  const target = (planMinutes ?? 0) * 60;
-  const remaining = target - elapsed;
-  const cls = target === 0 ? "text-[#9fb0d3]" : remaining < 0 ? "text-red-400" : remaining <= 60 ? "text-amber-400" : "text-[#9fb0d3]";
-  const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
-  const ss = String(elapsed % 60).padStart(2, "0");
-  return <span className={`font-mono tabular-nums ${cls}`} title={target ? `Planned ${planMinutes} min` : "Elapsed"}>{mm}:{ss}</span>;
+  const total = (goalMinutes ?? 0) * 60;
+
+  let countdown: React.ReactNode = null;
+  if (total > 0) {
+    const remaining = total - elapsed;
+    const over = remaining < 0;
+    const f = Math.max(0, Math.min(1, remaining / total)); // 1 = all the time left, 0 = none
+    const hue = Math.round(120 * f);                       // 120 green, 60 yellow, ~12 orange-red at 10%
+    countdown = (
+      <span
+        className={"font-mono tabular-nums " + (over ? "font-bold" : "")}
+        style={{ color: over ? "#ef4444" : `hsl(${hue} 85% 55%)` }}
+        title={`Goal ${goalMinutes} min`}
+      >
+        {over ? "-" : ""}{fmt(Math.abs(remaining))}
+      </span>
+    );
+  }
+
+  return (
+    <span className="flex items-center gap-2">
+      <span className="font-mono tabular-nums text-[#9fb0d3]" title="Elapsed">{fmt(elapsed)}</span>
+      {countdown && <span className="text-[#3b4a70]" aria-hidden>·</span>}
+      {countdown}
+    </span>
+  );
 }

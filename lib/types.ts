@@ -185,6 +185,7 @@ export type CueDeck = {
   created_at: string;
   updated_at: string;
   notes: string | null;      // about the whole message; editor Notes tab only
+  goal_minutes: number | null; // presenter counts down from this
   deleted_at: string | null; // in the trash when set; see lib/trash.ts
 };
 

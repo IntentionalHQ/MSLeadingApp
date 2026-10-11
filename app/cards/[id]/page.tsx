@@ -194,7 +194,7 @@ export default function DeckEditorPage() {
           <label>Deck title</label>
           <input defaultValue={deck.title} onBlur={(e) => { const v = e.target.value.trim() || "Untitled deck"; if (v !== deck.title) patchDeck({ title: v }); }} />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label>Passage</label>
             <input defaultValue={deck.passage ?? ""} placeholder="Mark 5:21–43" onBlur={(e) => { if ((e.target.value || null) !== deck.passage) patchDeck({ passage: e.target.value || null }); }} />
@@ -202,6 +202,12 @@ export default function DeckEditorPage() {
           <div>
             <label>Subtitle</label>
             <input defaultValue={deck.subtitle ?? ""} placeholder="Youth Group Message · 15–20 min" onBlur={(e) => { if ((e.target.value || null) !== deck.subtitle) patchDeck({ subtitle: e.target.value || null }); }} />
+          </div>
+          <div>
+            <label>Goal time (min)</label>
+            <input type="number" inputMode="numeric" min={0} defaultValue={deck.goal_minutes ?? ""} placeholder="20"
+              onBlur={(e) => { const v = e.target.value ? parseInt(e.target.value, 10) : null; if (v !== deck.goal_minutes) patchDeck({ goal_minutes: Number.isNaN(v as number) ? null : v }); }} />
+            <div className="text-xs text-[#9fb0d3] mt-1">The presenter counts down from this next to the running clock.</div>
           </div>
         </div>
       </div>

@@ -10,7 +10,7 @@ import type { CueBullet, CueCard, CueDeck } from "./types";
 import { CUE_COLORS, CUE_SYMBOLS, colorFromCell, colorToCell, newId, symbolsFromCell, symbolsToCell } from "./cueCards";
 
 export type ParsedDeck = {
-  deck: Partial<Pick<CueDeck, "title" | "passage" | "subtitle" | "notes">>;
+  deck: Partial<Pick<CueDeck, "title" | "passage" | "subtitle" | "notes" | "goal_minutes">>;
   cards: Array<Pick<CueCard, "title" | "scripture_ref" | "bullets" | "key_line" | "transition" | "notes">>;
   errors: string[];
   warnings: string[];
@@ -26,6 +26,7 @@ const DECK_KEYS = [
   ["Deck title", "title"],
   ["Passage", "passage"],
   ["Subtitle (e.g. Youth Group Message · 15-20 min)", "subtitle"],
+  ["Goal time (minutes)", "goal_minutes"],
   ["Notes (about this message; editor only)", "notes"],
 ] as const;
 
@@ -179,7 +180,15 @@ export function parseCueCardSheets(XLSX: XLSXModule, wb: any): ParsedDeck | null
     for (const row of rows) {
       const label = norm(row[0]);
       const hit = DECK_KEYS.find(([l]) => norm(l) === label || label.startsWith(norm(l).split(" (")[0]));
-      if (hit) (out.deck as any)[hit[1]] = cellText(row[1]);
+      if (!hit) continue;
+      if (hit[1] === "goal_minutes") {
+        const t = cellText(row[1]);
+        const n = t ? parseInt(t, 10) : NaN;
+        if (t && Number.isNaN(n)) warnings.push(`Goal time '${t}' is not a number; ignored.`);
+        else if (t) out.deck.goal_minutes = n;
+      } else {
+        (out.deck as any)[hit[1]] = cellText(row[1]);
+      }
     }
   }
 

@@ -36,7 +36,7 @@ function PresentInner() {
   if (!deck || !cards) {
     return <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b1220] text-[#9fb0d3]">Loading cards…</div>;
   }
-  return <CardPresenter deck={deck} cards={cards} backHref={back} since={since} planMinutes={plan} initialMode={view} />;
+  return <CardPresenter deck={deck} cards={cards} backHref={back} since={since} goalMinutes={deck.goal_minutes ?? plan} initialMode={view} />;
 }
 
 export default function PresentPage() {
