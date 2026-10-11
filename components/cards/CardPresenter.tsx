@@ -7,6 +7,8 @@ import { filledBullets } from "@/lib/cueCards";
 
 export type PresenterMode = "cards" | "outline";
 
+const RESUME_WINDOW_MS = 2 * 60 * 60 * 1000; // reopen within this and you're back on the card you left
+
 // Full-screen cue card deck in two modes:
 //  - cards: one card per screen, swipe up for the next card and down for the
 //    previous. Native CSS scroll-snap drives the motion (the compositor, not
@@ -45,7 +47,14 @@ export default function CardPresenter({
   useEffect(() => {
     if (mode !== "cards" || n === 0) return;
     let start = idxRef.current;
-    if (start === 0) { try { start = parseInt(sessionStorage.getItem(storageKey) ?? "0", 10) || 0; } catch {} }
+    if (start === 0) {
+      // Resume only within two hours (stepping out mid-message), otherwise
+      // a fresh Present always starts at card 1.
+      try {
+        const saved = JSON.parse(sessionStorage.getItem(storageKey) ?? "null") as { i: number; at: number } | null;
+        if (saved && Date.now() - saved.at < RESUME_WINDOW_MS) start = saved.i || 0;
+      } catch {}
+    }
     if (start > 0 && start < n) goTo(start, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, deck.id, n]);
@@ -62,7 +71,7 @@ export default function CardPresenter({
         if (!Number.isNaN(i) && i !== idxRef.current) {
           idxRef.current = i;
           setIdx(i);
-          try { sessionStorage.setItem(storageKey, String(i)); } catch {}
+          try { sessionStorage.setItem(storageKey, JSON.stringify({ i, at: Date.now() })); } catch {}
         }
       }
     }, { root: el, threshold: 0.6 });
