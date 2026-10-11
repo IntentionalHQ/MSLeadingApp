@@ -57,7 +57,7 @@ export function normalizeBullets(raw: unknown): CueBullet[] {
 }
 
 export function normalizeCard(row: any): CueCard {
-  return { ...row, bullets: normalizeBullets(row?.bullets) };
+  return { ...row, bullets: normalizeBullets(row?.bullets), notes_stale: !!row?.notes_stale };
 }
 
 // ---------------------------------------------------------------------------

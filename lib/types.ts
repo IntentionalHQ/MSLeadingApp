@@ -198,4 +198,5 @@ export type CueCard = {
   key_line: string | null;
   transition: string | null;
   notes: string | null;      // in-depth notes for this card; editor Notes tab only, never presented
+  notes_stale: boolean;      // card edited since notes were written; editor only
 };

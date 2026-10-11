@@ -27,6 +27,7 @@ export default function DeckEditorPage() {
   const [cards, setCards] = useState<CueCard[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [tab, setTab] = useState<"cards" | "notes">("cards"); // Notes = in-depth context, never presented
+  const [notesOpenFor, setNotesOpenFor] = useState<string | null>(null); // card whose notes are open inline on the Cards tab
   const [dragging, setDragging] = useState<{ id: string; overIndex: number } | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
   const rectsRef = useRef<DOMRect[]>([]);
@@ -52,10 +53,19 @@ export default function DeckEditorPage() {
   };
   // Blank bullet rows stay in local state (the one just added is being typed
   // into) but never reach the database.
+  // Editing what the audience sees flags the card's notes for a re-read, but
+  // only when there are notes to re-read; saving or confirming them clears it.
+  const PRESENTED: (keyof CueCard)[] = ["title", "scripture_ref", "bullets", "key_line", "transition"];
   const patchCard = (cid: string, patch: Partial<CueCard>) => {
-    setCards((p) => p.map((c) => (c.id === cid ? { ...c, ...patch } : c)));
+    const cur = cards.find((c) => c.id === cid);
+    const full: Partial<CueCard> = { ...patch };
+    if (!("notes_stale" in patch)) {
+      if ("notes" in patch) full.notes_stale = false;
+      else if (cur?.notes?.trim() && PRESENTED.some((k) => k in patch)) full.notes_stale = true;
+    }
+    setCards((p) => p.map((c) => (c.id === cid ? { ...c, ...full } : c)));
     touch();
-    return track(supabase.from("cue_cards").update(patch.bullets ? { ...patch, bullets: filledBullets(patch.bullets) } : patch).eq("id", cid));
+    return track(supabase.from("cue_cards").update(full.bullets ? { ...full, bullets: filledBullets(full.bullets) } : full).eq("id", cid));
   };
 
   const addCard = async () => {
@@ -230,6 +240,25 @@ export default function DeckEditorPage() {
                   </button>
                 </div>
 
+                {/* Editor-only: the card changed after its notes were written. Opens those notes right here. */}
+                {c.notes_stale && (
+                  <div className="mx-3 mb-2 rounded-lg border border-amber-600 bg-amber-900/30 text-amber-200 text-sm">
+                    <button type="button" onClick={() => setNotesOpenFor((o) => (o === c.id ? null : c.id))} className="w-full text-left px-3 py-2 flex items-center justify-between gap-2">
+                      <span>⚠ Card changed. Are the notes still good?</span>
+                      <span className="text-xs shrink-0 underline">{notesOpenFor === c.id ? "Close" : "Open notes"}</span>
+                    </button>
+                    {notesOpenFor === c.id && (
+                      <div className="px-3 pb-3 space-y-2">
+                        <AutoTextarea id={`stale-notes-${c.id}`} rows={5} defaultValue={c.notes ?? ""} placeholder="The full context of this card." />
+                        <div className="flex flex-wrap gap-2">
+                          <button type="button" className="btn btn-primary" onClick={() => { const el = document.getElementById(`stale-notes-${c.id}`) as HTMLTextAreaElement | null; patchCard(c.id, { notes: el?.value || null, notes_stale: false }); setNotesOpenFor(null); }}>Save notes</button>
+                          <button type="button" className="btn btn-ghost" onClick={() => { patchCard(c.id, { notes_stale: false }); setNotesOpenFor(null); }}>✓ Still good</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {!isOpen && (c.bullets.length > 0 || c.key_line) && (
                   <div role="button" tabIndex={0} onClick={() => setExpanded(c.id)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpanded(c.id); } }} className="px-3 pb-3 -mt-1 cursor-pointer" title="Tap to edit this card">
                     <ul className="space-y-0.5">{filledBullets(c.bullets).map((b) => <CueBulletView key={b.id} bullet={b} size="sm" />)}</ul>
@@ -300,6 +329,12 @@ export default function DeckEditorPage() {
                 <span className="font-semibold truncate">{c.title || <span className="text-[#9fb0d3] font-normal">Untitled card</span>}</span>
                 {c.scripture_ref && <span className="text-xs text-[#9fb0d3] shrink-0">{c.scripture_ref}</span>}
               </div>
+              {c.notes_stale && (
+                <div className="rounded-lg border border-amber-600 bg-amber-900/30 text-amber-200 text-sm px-3 py-2 flex flex-wrap items-center justify-between gap-2">
+                  <span>⚠ This card changed since these notes were written.</span>
+                  <button type="button" className="btn btn-ghost !min-h-0 !px-3 !py-1.5 text-sm" onClick={() => patchCard(c.id, { notes_stale: false })}>✓ Notes are still good</button>
+                </div>
+              )}
               <AutoTextarea rows={5} defaultValue={c.notes ?? ""} placeholder="The full context of this card: the point, the illustration in full, where it landed, what you would change next time."
                 onBlur={(e) => { if ((e.target.value || null) !== c.notes) patchCard(c.id, { notes: e.target.value || null }); }} />
             </div>

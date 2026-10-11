@@ -150,6 +150,7 @@ function exampleCards(): CueCard[] {
     key_line: "Two completely different lives. The same desperate need for Jesus.",
     transition: "She reaches out, touches his robe, and is healed. But what Jesus calls her next might be even more powerful.",
     notes: null,
+    notes_stale: false,
   }];
 }
 
