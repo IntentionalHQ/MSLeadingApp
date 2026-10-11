@@ -11,7 +11,7 @@ import { CUE_COLORS, CUE_SYMBOLS, colorFromCell, colorToCell, newId, symbolsFrom
 
 export type ParsedDeck = {
   deck: Partial<Pick<CueDeck, "title" | "passage" | "subtitle" | "notes" | "goal_minutes">>;
-  cards: Array<Pick<CueCard, "title" | "scripture_ref" | "bullets" | "key_line" | "transition" | "notes">>;
+  cards: Array<Pick<CueCard, "title" | "scripture_ref" | "bullets" | "key_line" | "transition" | "notes" | "color">>;
   errors: string[];
   warnings: string[];
 };
@@ -30,7 +30,7 @@ const DECK_KEYS = [
   ["Notes (about this message; editor only)", "notes"],
 ] as const;
 
-export const CARD_HEADERS = ["Order", "Card title", "Scripture", "Key line", "Transition", "Notes"] as const;
+export const CARD_HEADERS = ["Order", "Card title", "Scripture", "Key line", "Transition", "Notes", "Color"] as const;
 export const BULLET_HEADERS = ["Card", "Order", "Bullet", "Symbol", "Highlight"] as const;
 
 type XLSXModule = typeof import("xlsx");
@@ -52,6 +52,7 @@ export function cueCardInstructionRows(): string[] {
     "      Key line: ONE memorable sentence the leader wants to land, in their words.",
     "      Transition: one short sentence that leads into the next card. On the last card this is the closing line.",
     "      Notes: optional, as long as needed. The full context of this card for the leader coming back to the message later: what the point was, the illustration in full, where it landed. Shown only on the deck editor Notes tab, never while presenting. Not a script.",
+    "      Color: optional. One of: " + CUE_COLORS.filter((c) => c.id).map((c) => c.label).join(", ") + ". Give the cards of one section of the message the same colour so they read as a group. Blank = none.",
     "  • Card Bullets sheet = one row per memory trigger, 3-5 per card.",
     "      Card: the Order number of the card this bullet belongs to.",
     "      Order: 1, 2, 3 ... within that card.",
@@ -73,7 +74,7 @@ export function appendCueCardSheets(XLSX: XLSXModule, wb: any, cards: CueCard[])
   const bulletRows: (string | number)[][] = [[...BULLET_HEADERS]];
   const src = cards.length ? cards : exampleCards();
   src.forEach((c, i) => {
-    cardRows.push([i + 1, c.title, c.scripture_ref ?? "", c.key_line ?? "", c.transition ?? "", c.notes ?? ""]);
+    cardRows.push([i + 1, c.title, c.scripture_ref ?? "", c.key_line ?? "", c.transition ?? "", c.notes ?? "", colorToCell(c.color)]);
     c.bullets.forEach((b, j) => bulletRows.push([i + 1, j + 1, b.text, symbolsToCell(b.symbols), colorToCell(b.color)]));
   });
   const cs = XLSX.utils.aoa_to_sheet(cardRows);
@@ -152,6 +153,7 @@ function exampleCards(): CueCard[] {
     transition: "She reaches out, touches his robe, and is healed. But what Jesus calls her next might be even more powerful.",
     notes: null,
     notes_stale: false,
+    color: "",
   }];
 }
 
@@ -198,7 +200,7 @@ export function parseCueCardSheets(XLSX: XLSXModule, wb: any): ParsedDeck | null
   if (hi === -1) { errors.push(`The '${SHEET_CARDS}' sheet is missing its header row (Order, Card title, ...).`); return out; }
   const header = rows[hi].map(norm);
   const col = (name: string) => header.indexOf(norm(name));
-  const cOrder = col("Order"), cTitle = col("Card title"), cRef = col("Scripture"), cKey = col("Key line"), cTrans = col("Transition"), cNotes = col("Notes");
+  const cOrder = col("Order"), cTitle = col("Card title"), cRef = col("Scripture"), cKey = col("Key line"), cTrans = col("Transition"), cNotes = col("Notes"), cColor = col("Color");
   if (cTitle === -1) { errors.push("Cue Cards header must include 'Card title'."); return out; }
 
   type Row = ParsedDeck["cards"][number] & { order: number };
@@ -208,6 +210,8 @@ export function parseCueCardSheets(XLSX: XLSXModule, wb: any): ParsedDeck | null
     const title = cellText(r[cTitle]);
     if (title && /^example row/i.test(title)) { warnings.push(`Cue Cards row ${hi + i + 2} still looks like an example row; skipped.`); return; }
     const order = num(cOrder >= 0 ? r[cOrder] : null) ?? cards.length + 1;
+    let color = colorFromCell(cColor >= 0 ? r[cColor] : "");
+    if (color === null) { warnings.push(`Cue Cards row ${hi + i + 2}: colour '${r[cColor]}' not recognised; left blank.`); color = ""; }
     cards.push({
       order,
       title: title ?? "",
@@ -216,6 +220,7 @@ export function parseCueCardSheets(XLSX: XLSXModule, wb: any): ParsedDeck | null
       key_line: cellText(cKey >= 0 ? r[cKey] : null),
       transition: cellText(cTrans >= 0 ? r[cTrans] : null),
       notes: cellText(cNotes >= 0 ? r[cNotes] : null),
+      color,
     });
   });
   cards.sort((a, b) => a.order - b.order);

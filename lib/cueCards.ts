@@ -35,6 +35,12 @@ export function colorBg(color: CueColor): string {
   return CUE_COLORS.find((c) => c.id === color)?.bg ?? "transparent";
 }
 
+/** Solid version of a highlight colour, for card edges and bars. */
+export function colorSolid(color: CueColor): string | null {
+  const c = CUE_COLORS.find((x) => x.id && x.id === color);
+  return c ? c.bg.replace(/0\.2\d\)/, "0.9)") : null;
+}
+
 export function newId(prefix = "b"): string {
   return typeof crypto !== "undefined" && crypto.randomUUID
     ? crypto.randomUUID()
@@ -57,7 +63,12 @@ export function normalizeBullets(raw: unknown): CueBullet[] {
 }
 
 export function normalizeCard(row: any): CueCard {
-  return { ...row, bullets: normalizeBullets(row?.bullets), notes_stale: !!row?.notes_stale };
+  return {
+    ...row,
+    bullets: normalizeBullets(row?.bullets),
+    notes_stale: !!row?.notes_stale,
+    color: CUE_COLORS.some((c) => c.id && c.id === row?.color) ? row.color : "",
+  };
 }
 
 // ---------------------------------------------------------------------------

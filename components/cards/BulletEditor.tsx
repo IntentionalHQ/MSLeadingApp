@@ -2,6 +2,7 @@
 import { useRef, useState } from "react";
 import type { CueBullet, CueColor, CueSymbol } from "@/lib/types";
 import { CUE_COLORS, CUE_SYMBOLS, CUE_SYMBOLS_BY_ID, colorBg, newBullet } from "@/lib/cueCards";
+import AutoTextarea from "@/components/AutoTextarea";
 
 // Memory-trigger bullets for one card. Each row: symbol badge, text, and a
 // "mark" toggle that opens the symbol + highlight toolbar for that row only
@@ -56,15 +57,18 @@ export default function BulletEditor({ bullets, onChange }: { bullets: CueBullet
                   ? <span className="text-xs px-0.5">＋</span>
                   : b.symbols.map((s) => { const Icon = CUE_SYMBOLS_BY_ID[s].icon; return <Icon key={s} className="size-4" />; })}
               </button>
-              <input
+              {/* A wrapping, auto-growing box so a long bullet is readable on a phone.
+                  Enter saves and moves on (never a line break); Backspace on an empty row removes it. */}
+              <AutoTextarea
                 id={`bullet-${b.id}`}
+                rows={1}
                 defaultValue={b.text}
                 placeholder="Short reminder — a name, a question, a picture…"
                 className="!min-h-[36px] !py-1.5 !bg-transparent !border-0"
                 onBlur={(e) => { if (e.target.value !== b.text) update(b.id, { text: e.target.value }); }}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") { e.preventDefault(); (e.target as HTMLInputElement).blur(); if (i === bullets.length - 1) add(); }
-                  if (e.key === "Backspace" && !(e.target as HTMLInputElement).value && bullets.length > 1) { e.preventDefault(); remove(b.id); }
+                  if (e.key === "Enter") { e.preventDefault(); (e.target as HTMLTextAreaElement).blur(); if (i === bullets.length - 1) add(); }
+                  if (e.key === "Backspace" && !(e.target as HTMLTextAreaElement).value && bullets.length > 1) { e.preventDefault(); remove(b.id); }
                 }}
               />
               {/* Phones: the text box gets the whole row; move/delete live in the toolbar below. */}

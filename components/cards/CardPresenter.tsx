@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { CueCard, CueDeck } from "@/lib/types";
 import CueBulletView from "./CueBulletView";
-import { filledBullets } from "@/lib/cueCards";
+import { colorSolid, filledBullets } from "@/lib/cueCards";
 
 export type PresenterMode = "cards" | "outline";
 
@@ -155,8 +155,14 @@ export default function CardPresenter({
                 "flex flex-col mx-auto w-full max-w-2xl px-5 " +
                 (outline ? "py-6 border-b border-[#1f2a44] last:border-b-0" : "snap-start snap-always pt-16 pb-8")
               }
-              style={outline ? undefined : { height: "100dvh" }}
+              style={outline
+                ? (colorSolid(c.color) ? { borderLeft: `4px solid ${colorSolid(c.color)}`, paddingLeft: "1rem" } : undefined)
+                : { height: "100dvh" }}
             >
+              {/* Section colour: a short bar above the card, so cards of one part of the message match. */}
+              {!outline && colorSolid(c.color) && (
+                <div className="mb-2 h-1 w-12 rounded-full" style={{ background: colorSolid(c.color)! }} aria-hidden />
+              )}
               <div className="text-xs font-semibold uppercase tracking-widest text-[#9fb0d3]">
                 {outline && <span className="mr-2 text-[#e6ecf5]">{i + 1}/{n}</span>}
                 {c.scripture_ref || deck.passage}

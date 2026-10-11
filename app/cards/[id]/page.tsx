@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { CueBullet, CueCard, CueDeck } from "@/lib/types";
-import { cardFitWarning, filledBullets, normalizeCard } from "@/lib/cueCards";
+import { CUE_COLORS, cardFitWarning, colorSolid, filledBullets, normalizeCard } from "@/lib/cueCards";
 import type { ParsedDeck } from "@/lib/cueCardsXlsx";
 import PageHeader from "@/components/PageHeader";
 import Confirm from "@/components/Confirm";
@@ -192,7 +192,9 @@ export default function DeckEditorPage() {
       <div className="card p-4 space-y-3">
         <div>
           <label>Deck title</label>
-          <input defaultValue={deck.title} onBlur={(e) => { const v = e.target.value.trim() || "Untitled deck"; if (v !== deck.title) patchDeck({ title: v }); }} />
+          <AutoTextarea rows={1} defaultValue={deck.title}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); (e.target as HTMLTextAreaElement).blur(); } }}
+            onBlur={(e) => { const v = e.target.value.replace(/\s+/g, " ").trim() || "Untitled deck"; if (v !== deck.title) patchDeck({ title: v }); }} />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
@@ -228,7 +230,11 @@ export default function DeckEditorPage() {
           return (
             <div key={c.id}>
               {dragging && dragging.overIndex === i && <div className="h-0.5 bg-blue-500 rounded mb-2" />}
-              <div id={`card-${c.id}`} className={`card overflow-hidden ${dragging?.id === c.id ? "opacity-50" : ""}`}>
+              <div
+                id={`card-${c.id}`}
+                className={`card overflow-hidden ${dragging?.id === c.id ? "opacity-50" : ""}`}
+                style={colorSolid(c.color) ? { borderLeft: `5px solid ${colorSolid(c.color)}` } : undefined}
+              >
                 <div className="flex items-stretch">
                   <span onPointerDown={startDrag(c.id)} role="button" aria-label="Drag to reorder" className="touch-none cursor-grab select-none text-[#9fb0d3] px-2 py-3 flex items-center">⠿</span>
                   <button type="button" onClick={() => setExpanded((cur) => (cur === c.id ? null : c.id))} className="flex-1 flex items-center gap-2 py-3 pr-3 text-left min-w-0">
@@ -265,10 +271,11 @@ export default function DeckEditorPage() {
                   </div>
                 )}
 
-                {!isOpen && (c.bullets.length > 0 || c.key_line) && (
+                {!isOpen && (c.bullets.length > 0 || c.key_line || c.transition) && (
                   <div role="button" tabIndex={0} onClick={() => setExpanded(c.id)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpanded(c.id); } }} className="px-3 pb-3 -mt-1 cursor-pointer" title="Tap to edit this card">
                     <ul className="space-y-0.5">{filledBullets(c.bullets).map((b) => <CueBulletView key={b.id} bullet={b} size="sm" />)}</ul>
                     {c.key_line && <div className="mt-2 text-sm italic border-l-2 border-blue-500 pl-2 text-[#e6ecf5]">“{c.key_line}”</div>}
+                    {c.transition && <div className="mt-2 text-sm border-l-2 border-purple-500 pl-2 text-[#9fb0d3]">{c.transition}</div>}
                   </div>
                 )}
 
@@ -276,14 +283,33 @@ export default function DeckEditorPage() {
                   <div className="border-t border-[#1f2a44] mt-1 pt-3 px-3 pb-3 space-y-3">
                     <div>
                       <label>Card title</label>
-                      <input defaultValue={c.title} placeholder="Jairus Had Everything. The Woman Had Nothing. Both Needed Jesus."
-                        onBlur={(e) => { if (e.target.value !== c.title) patchCard(c.id, { title: e.target.value }); }} />
+                      <AutoTextarea rows={1} defaultValue={c.title} placeholder="Jairus Had Everything. The Woman Had Nothing. Both Needed Jesus."
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); (e.target as HTMLTextAreaElement).blur(); } }}
+                        onBlur={(e) => { const v = e.target.value.replace(/\s+/g, " ").trim(); if (v !== c.title) patchCard(c.id, { title: v }); }} />
                       <div className="text-xs text-[#9fb0d3] mt-1">A conversational headline that tells you what this section is about in one glance.</div>
                     </div>
                     <div>
                       <label>Scripture (optional)</label>
                       <input defaultValue={c.scripture_ref ?? ""} placeholder="Mark 5:21–29"
                         onBlur={(e) => { if ((e.target.value || null) !== c.scripture_ref) patchCard(c.id, { scripture_ref: e.target.value || null }); }} />
+                    </div>
+                    <div>
+                      <label>Section colour</label>
+                      <div className="flex items-center gap-1.5">
+                        {CUE_COLORS.map((col) => (
+                          <button
+                            key={col.id || "none"}
+                            type="button"
+                            onClick={() => { if (col.id !== c.color) patchCard(c.id, { color: col.id }); }}
+                            className={"h-8 w-8 rounded-full border-2 " + (c.color === col.id ? "border-[#e6ecf5]" : "border-[#2a3654]")}
+                            style={{ background: colorSolid(col.id) ?? "transparent" }}
+                            title={col.label}
+                            aria-label={col.label}
+                            aria-pressed={c.color === col.id}
+                          >{!col.id && <span className="text-xs text-[#9fb0d3]">–</span>}</button>
+                        ))}
+                      </div>
+                      <div className="text-xs text-[#9fb0d3] mt-1">Give the cards of one part of the message the same colour so they read as a group.</div>
                     </div>
                     <div>
                       <label>Memory triggers (3–5 bullets)</label>
